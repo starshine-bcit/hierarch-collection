@@ -1,0 +1,41 @@
+# {{ ansible_managed }}
+
+# Database
+db=postgres
+db-url={{ kc_db_url }}
+db-username={{ kc_db_user }}
+db-password={{ kc_db_pass }}
+db-schema=keycloak
+
+# Observability
+metrics-enabled=true
+health-enabled=true
+
+# HTTP
+http-enabled=true
+http-port={{ kc_http_port }}
+
+# HTTPS
+https-port={{ kc_https_port }}
+{% if kc_https_enabled %}
+https-certificate-file={{ kc_remote_cert }}
+https-certificate-key-file={{ kc_remote_key }}
+{% endif %}
+
+# Client URL configuration
+hostname-url={{ kc_public_url }}
+hostname-admin-url={{ kc_admin_url }}
+hostname-strict=true
+hostname-strict-backchannel=false
+
+{% if kc_proxy_mode is defined and kc_proxy_mode != "none" %}
+# Proxy
+proxy={{ kc_proxy_mode }}
+{% endif %}
+
+# Logging
+{# log=console,file #}
+log=console
+log-level={{ kc_log_level }}
+log-file={{ kc_log_level }}
+log-file-format='%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c] (%t) %s%e%n'

@@ -1,0 +1,56 @@
+argument_specs:
+  main:
+    short_description: Setup server with Let's Encrypt cert and renewal
+    version_added: "0.1.0"
+    options:
+      certbot_admin_email:
+        required: true
+      certbot_certs:
+        type: list
+        required: true
+      certbot_create_standalone_stop_services:
+        type: list
+        required: true
+      certbot_auto_renew_user:
+        required: true
+      certbot_install_method:
+        required: false
+      certbot_auto_renew:
+        type: bool
+        required: false
+      certbot_auto_renew_hour:
+        required: false
+      certbot_auto_renew_minute:
+        required: false
+      certbot_auto_renew_options:
+        required: false
+      certbot_create_if_missing:
+        required: false
+        type: bool
+      certbot_create_method:
+        required: false
+      certbot_testmode:
+        required: false
+        type: bool
+      certbot_hsts:
+        required: false
+        type: bool
+      certbot_repo:
+        required: false
+      certbot_version:
+        required: false
+      certbot_keep_updated:
+        required: false
+        type: bool
+      certbot_dir:
+        required: false
+      nginx_branch:
+        required: false
+      nginx_upstreams:
+        required: true
+        type: list
+      domain_name:
+        required: true
+      nginx_main_locations:
+        required: true
+        type: list

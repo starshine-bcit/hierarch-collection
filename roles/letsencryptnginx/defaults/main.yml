@@ -1,0 +1,14 @@
+certbot_install_method: source
+certbot_auto_renew: true
+certbot_auto_renew_hour: "3"
+certbot_auto_renew_minute: "30"
+certbot_auto_renew_options: "--quiet"
+certbot_create_if_missing: true
+certbot_create_method: standalone
+certbot_testmode: false
+certbot_hsts: false
+certbot_repo: https://github.com/certbot/certbot.git
+certbot_version: master
+certbot_keep_updated: true
+certbot_dir: /opt/certbot
+nginx_branch: stable

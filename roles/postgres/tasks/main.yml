@@ -9,25 +9,39 @@
           - libpq-dev
           - python3-psycopg2
           - openssl
+          - acl
         update_cache: true
+    - name: Copy certificate over
+      ansible.builtin.copy:
+        src: "{{ kc_local_cert_file }}"
+        dest: /etc/postgresql/15/main/server.crt
+        owner: root
+        group: postgres
+        mode: "640"
+      tags:
+        - always
+    - name: Copy private key over
+      ansible.builtin.copy:
+        src: "{{ kc_local_key_file }}"
+        dest: /etc/postgresql/15/main/server.key
+        owner: root
+        group: postgres
+        mode: "640"
+      tags:
+        - always
+    - name: Copy ca cert over
+      ansible.builtin.copy:
+        src: "{{ ca_local_cert_file }}"
+        dest: /etc/postgresql/15/main/ca.crt
+        owner: root
+        group: postgres
+        mode: "640"
+      tags:
+        - always
 - name: Configure keycloak postgres
   become: true
   become_user: postgres
   block:
-    - name: Copy certificate over
-      ansible.builtin.copy:
-        src: "{{ kc_local_cert_file }}"
-        dest: /etc/postgresql/15/main/postgres.pem
-        owner: root
-        group: postgres
-        mode: '640'
-    - name: Copy private key over
-      ansible.builtin.copy:
-        src: "{{ kc_local_key_file }}"
-        dest: /etc/postgresql/15/main/postgres.key
-        owner: root
-        group: postgres
-        mode: '640'
     - name: Create new database "{{ kc_db_name }}"
       community.postgresql.postgresql_db:
         name: "{{ kc_db_name }}"
@@ -38,16 +52,29 @@
         user: "{{ kc_db_user }}"
         password: "{{ kc_db_pass }}"
         expires: "Infinity"
-    - name: Create new schema keycloak in "{{ kc_db_name }}"
+    - name: Create new schema keycloak
       community.postgresql.postgresql_schema:
+        db: "{{ kc_db_name }}"
         name: keycloak
-        owner: "{{ kc_db_user }}"
+        owner: postgres
+    - name: Grant schema privs
+      community.postgresql.postgresql_privs:
+        db: "{{ kc_db_name }}"
+        state: present
+        priv: ALL
+        type: schema
+        objs: keycloak
+        role: "{{ kc_db_user }}"
+    - name: Reassign ownership of db to "{{ kc_db_user }}"
+      community.postgresql.postgresql_owner:
+        db: "{{ kc_db_name }}"
+        new_owner: "{{ kc_db_user }}"
     - name: Setup permissions for "{{ kc_db_user }}"
       community.postgresql.postgresql_privs:
         db: postgres
+        state: present
         privs: ALL
         role: "{{ kc_db_user }}"
-        schema: keycloak
         type: database
         obj: "{{ kc_db_name }}"
         grant_option: false
@@ -58,7 +85,7 @@
         contype: local
         users: "{{ kc_db_user }}"
         method: scram-sha-256
-        mode: '640'
+        mode: "640"
         group: postgres
         owner: postgres
       when: kc_db_origin == "127.0.0.1"
@@ -70,17 +97,41 @@
         address: "{{ kc_db_origin }}"
         users: "{{ kc_db_user }}"
         method: scram-sha-256
-        mode: '640'
+        mode: "640"
         group: postgres
         owner: postgres
       when: kc_db_origin != "127.0.0.1"
-    - name: Configure SSL cert file
-      community.postgresql.postgresql_set:
-        db: postgres
-        name: ssl_cert_file
-        value: /etc/postgresql/15/main/postgres.pem
-    - name: Configure SSL key file
-      community.postgresql.postgresql_set:
-        db: postgres
-        name: ssl_key_file
-        value: /etc/postgresql/15/main/postgres.key
+    - name: Change ssl_cert_file config line
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/15/main/postgresql.conf
+        regexp: "^ssl_cert_file"
+        backrefs: true
+        line: "ssl_cert_file = '/etc/postgresql/15/main/server.crt'"
+    - name: Change ssl_key_file config line
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/15/main/postgresql.conf
+        regexp: "^ssl_key_file"
+        backrefs: true
+        line: "ssl_key_file = '/etc/postgresql/15/main/server.key'"
+    - name: Change ssl_ca_file config line
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/15/main/postgresql.conf
+        regexp: "^#ssl_ca_file"
+        backrefs: true
+        line: "ssl_ca_file = '/etc/postgresql/15/main/ca.crt'"
+    - name: Restart postgres
+      ansible.builtin.systemd_service:
+        name: postgresql
+        state: restarted
+      become: true
+      become_user: root
+    # - name: Configure SSL cert file
+    #   community.postgresql.postgresql_set:
+    #     db: postgres
+    #     name: ssl_cert_file
+    #     value: /etc/postgresql/15/main/postgres.pem
+    # - name: Configure SSL key file
+    #   community.postgresql.postgresql_set:
+    #     db: postgres
+    #     name: ssl_key_file
+    #     value: /etc/postgresql/15/main/postgres.key

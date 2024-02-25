@@ -1,7 +1,8 @@
 ---
 - name: Restart postgres
-  service:
+  ansible.builtin.systemd_service:
     name: postgresql
     state: restarted
-    become: true
-    become_user: root
+  become: true
+  become_user: root
+  listen: "restart postgres"
