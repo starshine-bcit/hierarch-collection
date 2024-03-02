@@ -77,16 +77,9 @@
           - backup: true
             config:
               upstreams: "{{ nginx_upstreams }}"
-              core:
-                error_page:
-                  - code:
-                      - 404
-                    response: 404
               ssl:
-                certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
-                certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
-                # certificate: "/etc/letsencrypt/live/{{ domain_name }}/fullchain.pem"
-                # certificate_key: "/etc/letsencrypt/live/{{ domain_name }}/privkey.pem"
+                certificate: "{{ cert_file }}"
+                certificate_key: "{{ cert_key }}"
                 ciphers:
                   - HIGH
                   - "!aNull"
@@ -154,40 +147,7 @@
                   inactive: 20s
                   min_uses: 2
                   valid: 1m
-              servers:
-                - core:
-                    listen:
-                      - address: "0.0.0.0"
-                        port: 80
-                        default_server: true
-                        ssl: false
-                      - address: "[::]"
-                        port: 80
-                        default_server: true
-                        ssl: false
-                    server_name: "{{ domain_name }}"
-                  http2:
-                    enable: false
-                  rewrite:
-                    return:
-                      code: 301
-                      url: "https://$host$request_uri"
-                - core:
-                    listen:
-                      - address: "0.0.0.0"
-                        port: 443
-                        default_server: true
-                        ssl: true
-                        reuseport: true
-                        so_keepalive: true
-                      - address: "[::]"
-                        port: 443
-                        default_server: true
-                        ssl: true
-                        reuseport: true
-                        so_keepalive: true
-                    server_name: "{{ domain_name }}"
-                  locations: "{{ nginx_main_locations }}"
+              servers: "{{ servers }}"
                   # sub_filter:
                   #   sub_filters:
                   #     - string: server_hostname
@@ -211,8 +171,9 @@
     - name: Ensure http2 is enabled
       ansible.builtin.lineinfile:
         path: /etc/nginx/conf.d/default.conf
-        insertafter: "server_name {{ domain_name }};"
+        insertafter: "server_name {{ item }};"
         line: "    http2 on;"
+      loop: "{{ server_names }}"
     - name: Reload nginx
       ansible.builtin.systemd_service:
         name: nginx

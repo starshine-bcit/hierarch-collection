@@ -1,0 +1,26 @@
+argument_specs:
+  main:
+    short_description: Setup server with Let's Encrypt cert and renewal
+    version_added: "0.1.0"
+    options:
+      hostname:
+        required: true
+      git_version:
+        required: true
+        options:
+          nightly:
+          master:
+      acme_contact:
+        required: true
+      additional_san:
+        required: false
+      install_path:
+        required: false
+      timezone:
+        required: false
+      install_updates:
+        required: false
+        type: bool
+      redirect_http:
+        required: false
+        type: bool

@@ -19,3 +19,6 @@ argument_specs:
       nginx_main_locations:
         required: true
         type: list
+      servers:
+        required: true
+        type: list

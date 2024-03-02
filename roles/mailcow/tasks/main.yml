@@ -1,0 +1,27 @@
+---
+- name: Setup system environment and install mailcow
+  become: true
+  block:
+    - name: Install system packages
+      ansible.builtin.apt:
+        pkg:
+          - python3
+          - python3-pip
+          - curl
+        state: present
+        update_cache: true
+    - name: Install docker-ce role
+      ansible.builtin.import_role:
+        name: haxorof.docker_ce
+    - name: Install mailcow role
+      ansible.builtin.import_role:
+        name: mailcow.mailcow
+      vars:
+        mailcow__hostname: "{{ hostname }}"
+        mailcow__install_path: "{{ install_path }}"
+        mailcow__git_version: "{{ git_version }}"
+        mailcow__timezone: "{{ timezone }}"
+        mailcow__config_additional_san: "{{ additional_san }}"
+        mailcow__install_updates: "{{ install_updates }}"
+        mailcow__redirect_http_to_https: "{{ redirect_http }}"
+        mailcow__config_acme_contact: "{{ acme_contact }}"

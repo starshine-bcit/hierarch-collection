@@ -1,0 +1,75 @@
+---
+- name: Prepare system environment
+  become: true
+  block:
+    - name: Install system packages
+      ansible.builtin.apt:
+        pkg:
+          - python3
+          - python3-pip
+          - virtualenv
+          - curl
+        state: present
+        update_cache: true
+    - name: Install docker-ce role
+      ansible.builtin.import_role:
+        name: haxorof.docker_ce
+- name: Install and setup forgejo docker
+  become: true
+  block:
+    - name: Make forgejo dir
+      ansible.builtin.file:
+        state: directory
+        path: /srv/forgejo
+        mode: '755'
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+    - name: Create/update env file
+      ansible.builtin.copy:
+        content: "{{ fj_env }}"
+        dest: /srv/forgejo
+        owner: root
+        group: root
+        mode: '640'
+      no_log: true
+    - name: Start forgejo container
+      community.docker.docker_container:
+        name: forgejo
+        image: "{{ fj_image }}:{{ fj_version }}"
+        restart_policy: always
+        ports:
+          - "{{ fj_ssh_port }}:{{ fj_ssh_port }}"
+          - "{{ fj_http_port }}:{{ fj_http_port }}"
+        volumes:
+          - /srv/forgejo:/data
+          - /etc/timezone:/etc/timezone:ro
+          - /etc/localtime:/etc/localtime:ro
+          - /etc/ssl/certs:/etc/ssl/certs:ro
+          - /usr/local/share/ca-certificates/infrastructure:/usr/local/share/ca-certificates/infrastructure:ro
+        env_file: /srv/forgejo.env
+    - name: Setup forgejo admin script
+      ansible.builtin.template:
+        src: install_fj.j2
+        dest: /srv/setup_fj.sh
+        owner: root
+        group: root
+        mode: '770'
+    - name: Run setup script
+      ansible.builtin.command:
+        cmd: "bash /srv/setup-forgejo.sh \"{{ fj_user }}\" \"{{ fj_pass }}\" \"{{ fj_email }}\""
+      register: token
+      changed_when: false
+    - name: Create forgejo dir on controller
+      ansible.builtin.file:
+        state: directory
+        path: forgejo
+        mode: '750'
+      delegate_to: localhost
+      become: false
+    - name: Save registration token
+      ansible.builtin.copy:
+        content: "{{ token.stdout }}"
+        dest: forgejo/token
+        mode: '640'
+      delegate_to: localhost
+      become: false
