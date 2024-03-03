@@ -7,8 +7,28 @@
         pkg:
           - cron
           - git
+          - nginx
         state: present
         update_cache: true
+    - name: Install nginx role
+      ansible.builtin.import_role:
+        name: nginxinc.nginx
+      vars:
+        nginx_branch: stable
+        nginx_modules:
+          - geoip
+          - njs
+        nginx_logrotate_conf_enabled: true
+        nginx_logrotate_conf:
+          paths: /var/log/nginx/*.log
+          options:
+            - daily
+            - missingok
+            - rotate 14
+            - compress
+            - delaycompress
+            - notifempty
+            - sharedscripts
     - name: Install certbot role with auto renewal
       ansible.builtin.include_role:
         name: geerlingguy.certbot
@@ -30,25 +50,6 @@
         certbot_admin_email: "{{ admin_email }}"
         certbot_create_standalone_stop_services: "{{ stop_services }}"
         certbot_auto_renew_user: root
-    - name: Install nginx role
-      ansible.builtin.import_role:
-        name: nginxinc.nginx
-      vars:
-        nginx_branch: stable
-        nginx_modules:
-          - geoip
-          - njs
-        nginx_logrotate_conf_enabled: true
-        nginx_logrotate_conf:
-          paths: /var/log/nginx/*.log
-          options:
-            - daily
-            - missingok
-            - rotate 14
-            - compress
-            - delaycompress
-            - notifempty
-            - sharedscripts
     - name: Configure nginx role
       ansible.builtin.import_role:
         name: nginxinc.nginx_config

@@ -14,11 +14,6 @@ argument_specs:
       nginx_upstreams:
         required: true
         type: list
-      domain_name:
-        required: true
-      nginx_main_locations:
-        required: true
-        type: list
       servers:
         required: true
         type: list

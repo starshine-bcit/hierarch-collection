@@ -9,67 +9,88 @@
           - python3-pip
           - virtualenv
           - curl
+          - git
+          - git-lfs
+          - wget
         state: present
         update_cache: true
-    - name: Install docker-ce role
-      ansible.builtin.import_role:
-        name: haxorof.docker_ce
-- name: Install and setup forgejo docker
+- name: Install and setup forgejo bin
   become: true
   block:
-    - name: Make forgejo dir
-      ansible.builtin.file:
-        state: directory
-        path: /srv/forgejo
+    - name: Download forgejo binary
+      ansible.builtin.get_url:
+        url: "{{ fj_download_link }}"
+        dest: "/usr/local/bin/forgejo"
+        owner: root
+        group: root
         mode: '755'
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-    - name: Create/update env file
-      ansible.builtin.copy:
-        content: "{{ fj_env }}"
-        dest: /srv/forgejo
-        owner: root
-        group: root
-        mode: '640'
-      no_log: true
-    - name: Start forgejo container
-      community.docker.docker_container:
-        name: forgejo
-        image: "{{ fj_image }}:{{ fj_version }}"
-        restart_policy: always
-        ports:
-          - "{{ fj_ssh_port }}:{{ fj_ssh_port }}"
-          - "{{ fj_http_port }}:{{ fj_http_port }}"
-        volumes:
-          - /srv/forgejo:/data
-          - /etc/timezone:/etc/timezone:ro
-          - /etc/localtime:/etc/localtime:ro
-          - /etc/ssl/certs:/etc/ssl/certs:ro
-          - /usr/local/share/ca-certificates/infrastructure:/usr/local/share/ca-certificates/infrastructure:ro
-        env_file: /srv/forgejo.env
-    - name: Setup forgejo admin script
-      ansible.builtin.template:
-        src: install_fj.j2
-        dest: /srv/setup_fj.sh
-        owner: root
-        group: root
-        mode: '770'
-    - name: Run setup script
-      ansible.builtin.command:
-        cmd: "bash /srv/setup-forgejo.sh \"{{ fj_user }}\" \"{{ fj_pass }}\" \"{{ fj_email }}\""
-      register: token
-      changed_when: false
-    - name: Create forgejo dir on controller
+    - name: Make git user
+      ansible.builtin.user:
+        name: git
+        state: present
+        system: true
+        password: '!'
+        create_home: true
+        home: "/home/git"
+    - name: Create forgejo var dir
       ansible.builtin.file:
         state: directory
-        path: forgejo
+        path: /var/lib/forgejo
+        owner: git
+        group: git
         mode: '750'
-      delegate_to: localhost
-      become: false
-    - name: Save registration token
-      ansible.builtin.copy:
-        content: "{{ token.stdout }}"
-        dest: forgejo/token
-        mode: '640'
-      delegate_to: localhost
-      become: false
+    - name: Create forgejo etc dir
+      ansible.builtin.file:
+        state: directory
+        path: /etc/forgejo
+        owner: root
+        group: git
+        mode: '770'
+    - name: Copy over systemd service
+      ansible.builtin.template:
+        src: forgejo.service.j2
+        dest: "/etc/systemd/system/forgejo.service"
+        owner: root
+        group: root
+        mode: '644'
+    - name: Copy over app.ini template
+      ansible.builtin.template:
+        src: app.ini.j2
+        dest: "/etc/forgejo/app.ini"
+        owner: root
+        group: git
+        mode: '660'
+    - name: Start/restart forgejo service
+      ansible.builtin.systemd_service:
+        name: forgejo
+        state: restarted
+        enabled: true
+        daemon_reload: true
+    - name: Copy over forgejo script
+      ansible.builtin.template:
+        src: forgejo.sh.j2
+        dest: "/usr/local/bin/forgejo.sh"
+        owner: root
+        group: root
+        mode: '755'
+    - name: Check if admin user exists
+      ansible.builtin.command:
+        cmd: "sleep 30 && forgejo admin user list --admin"
+      become: true
+      become_user: git
+      register: admins
+      changed_when: false
+    - name: Create admin user
+      ansible.builtin.command:
+        cmd: "forgejo admin user create --admin --username \"{{ fj_user }}\" --password \"{{ fj_pass }}\" --email \"{{ fj_email }}\""
+      become: true
+      become_user: git
+      when: fj_user not in admins.stdout
+      changed_when: true
+    - name: Update admin password
+      ansible.builtin.command:
+        cmd: "forgejo admin user change-password --username \"{{ fj_user }}\" --password \"{{ fj_pass }}\""
+      become: true
+      become_user: git
+      when: fj_user in admins.stdout
+      changed_when: false

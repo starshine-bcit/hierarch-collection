@@ -1,0 +1,92 @@
+
+APP_NAME = Hierarch Forgejo
+RUN_USER = git
+RUN_MODE = prod
+
+[server]
+PROTOCOL = http
+DOMAIN = {{ fj_host }}
+ROOT_URL = https://{{ fj_host }}:443/
+HTTP_PORT = 7001
+REDIRECT_OTHER_PORT = false
+DISABLE_SSH = false
+START_SSH_SERVER = true
+SSH_DOMAIN = {{ fj_host }}
+SSH_PORT = 1001
+SSH_LISTEN_PORT = 1001
+ENABLE_ACME = false
+
+[database]
+DB_TYPE = postgres
+HOST = {{ db_hostname }}:5432
+NAME = forgejo
+USER = {{ fj_db_user }}
+PASSWD = {{ fj_db_pass }}
+SCHEMA = forgejo
+SSL_MODE = require
+
+[security]
+INSTALL_LOCK = true
+SECRET_KEY = {{ fj_secret_key }}
+INTERNAL_TOKEN = {{ fj_internal_key }}
+COOKIE_USERNAME = hrgituser
+COOKIE_REMEMBER_NAME = hrgitrem
+REVERSE_PROXY_LIMIT = 1
+DISABLE_WEBHOOKS = false
+
+[oauth2]
+ENABLED = true
+DEFAULT_APPLICATIONS = git-credential-oauth,git-credential-manager
+
+[log]
+MODE = console
+LEVEL = Info
+ENABLE_SSH_LOG = true
+
+[service]
+REGISTER_EMAIL_CONFIRM = false
+DISABLE_REGISTRATION = false
+ALLOW_ONLY_EXTERNAL_REGISTRATION = true
+REQUIRE_SIGNIN_VIEW = true
+ENABLE_NOTIFY_MAIL = true
+ENABLE_BASIC_AUTHENTICATION = false
+ENABLE_CAPTCHA = false
+REQUIRE_CAPTCHA_FOR_LOGIN = false
+DEFAULT_KEEP_EMAIL_PRIVATE = false
+DEFAULT_ALLOW_CREATE_ORGANIZATION = false
+DEFAULT_USER_VISIBILITY = limited
+ALLOWED_USER_VISIBILITY_MODES = limited
+DEFAULT_ORG_VISIBILITY = limited
+DEFAULT_ORG_MEMBER_VISIBLE = true
+NO_REPLY_ADDRESS = {{ fj_mailer_from }}
+SHOW_REGISTRATION_BUTTON = false
+
+[admin]
+DISABLE_REGULAR_ORG_CREATION = true
+USER_DISABLED_FEATURES = deletion
+
+[openid]
+ENABLE_OPENID_SIGNIN = true
+ENABLE_OPENID_SIGNUP = true
+WHITELISTED_URIS = {{ db_hostname }}
+
+[oauth2_client]
+REGISTER_EMAIL_CONFIRM = false
+OPENID_CONNECT_SCOPES = openid profile email
+ENABLE_AUTO_REGISTRATION = true
+USERNAME = nickname
+UPDATE_AVATAR = true
+
+[mailer]
+ENABLED = true
+PROTOCOL = {{ smtp_type }}
+SMTP_ADDR = {{ smtp_host }}
+SMTP_PORT = 587
+FROM = {{ fj_mailer_from }}
+USER = {{ fj_smtp_user }}
+PASSWD = {{ fj_smtp_pass }}
+
+[session]
+PROVIDER = db
+COOKIE_NAME = hrgitsess
+COOKIE_SECURE = true

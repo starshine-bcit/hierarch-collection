@@ -110,12 +110,23 @@
         group: postgres
         owner: postgres
       when: kc_db_origin != "127.0.0.1"
-    - name: Configure remote pg_hba for forgejo
+    - name: Configure remote ipv4 pg_hba for forgejo
       community.postgresql.postgresql_pg_hba:
         dest: /etc/postgresql/15/main/pg_hba.conf
         databases: forgejo
         contype: host
         address: "{{ hostvars['app01'].ansible_host }}"
+        users: "{{ fj_db_user }}"
+        method: scram-sha-256
+        mode: "640"
+        group: postgres
+        owner: postgres
+    - name: Configure remote ipv6 pg_hba for forgejo
+      community.postgresql.postgresql_pg_hba:
+        dest: /etc/postgresql/15/main/pg_hba.conf
+        databases: forgejo
+        contype: host
+        address: "{{ hostvars['app01'].ipv6 }}"
         users: "{{ fj_db_user }}"
         method: scram-sha-256
         mode: "640"
@@ -153,6 +164,12 @@
         regexp: "^ssl_key_file"
         backrefs: true
         line: "ssl_key_file = '{{ postgres_local_key_file }}'"
+    - name: Set listen address to all
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/15/main/postgresql.conf
+        regexp: "listen_address = 'localhost'"
+        backrefs: true
+        line: "listen_address = '*'"
     - name: Change ssl config line
       ansible.builtin.lineinfile:
         path: /etc/postgresql/15/main/postgresql.conf
