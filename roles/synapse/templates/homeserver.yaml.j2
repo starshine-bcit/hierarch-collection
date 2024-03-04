@@ -112,3 +112,9 @@ sso:
     client_whitelist:
       - https://{{ el_host }}/
     update_profile_information: true
+turn_uris:
+  - "turn:{{ mx_host }}?transport=udp"
+  - "turn:{{ mx_host }}?transport=tcp"
+turn_shared_secret: {{ turn_auth_secret }}
+turn_user_lifetime: 86400000
+turn_allow_guests: true
