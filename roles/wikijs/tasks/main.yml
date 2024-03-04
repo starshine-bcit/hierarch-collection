@@ -6,6 +6,7 @@
       ansible.builtin.apt:
         pkg:
           - postgresql-contrib
+          - nodejs
         state: present
         update_cache: true
     - name: Create /srv dir if not exist
@@ -35,6 +36,13 @@
         owner: root
         group: wikijs
         mode: '770'
+    - name: Create data dir
+      ansible.builtin.file:
+        state: directory
+        path: "{{ wk_base_dir }}/data"
+        owner: wikijs
+        group: root
+        mode: '770'
 - name: Install and configure wikijs
   become: true
   block:
@@ -52,3 +60,23 @@
         remote_src: true
         owner: root
         group: wikijs
+    - name: Copy over config template
+      ansible.builtin.template:
+        src: config.yml.j2
+        dest: "{{ wk_base_dir }}/config.yml"
+        owner: root
+        group: wikijs
+        mode: '640'
+    - name: Copy over systemd service
+      ansible.builtin.template:
+        src: wikijs.service.j2
+        dest: "/etc/systemd/system/wikijs.service"
+        owner: root
+        group: root
+        mode: '644'
+    - name: Start/Restart systemd service
+      ansible.builtin.systemd_service:
+        name: wikijs
+        state: restarted
+        enabled: true
+        daemon_reload: true

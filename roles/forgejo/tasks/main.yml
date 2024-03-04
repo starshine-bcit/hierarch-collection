@@ -75,10 +75,8 @@
         group: root
         mode: '755'
     - name: Sleep while forgejo starts up
-      ansible.builtin.command:
-        cmd: "sleep 30"
-      become: false
-      changed_when: false
+      ansible.builtin.pause:
+        seconds: 30
     - name: Check if admin user exists
       ansible.builtin.command:
         cmd: "forgejo -c /etc/forgejo/app.ini admin user list --admin"
@@ -114,16 +112,19 @@
       register: auth
     - name: Add authentication source
       ansible.builtin.command:
-        cmd: "forgejo -c /etc/forgejo/app.ini admin auth add-oauth --name keycloak \
+        cmd: "forgejo -c /etc/forgejo/app.ini admin \
+          auth add-oauth \
+          --name keycloak \
           --provider openidConnect \
           --key {{ oidc_id }} \
           --secret {{ fj_client_secret }} \
-          --auto-discover-url \"{{ oidc_url }}\" --required-claim-name forgejo_user \
+          --auto-discover-url \"{{ oidc_url }}\" \
+          --required-claim-name forgejo_user \
           --required-claim-value \"true\" \
           --group-claim-name forgejo_groups \
           --admin-group forgejo_admin"
       become: true
       become_user: git
       changed_when: true
-      when: oidc_id not in auth.stdout
+      when: kc_name not in auth.stdout
       no_log: true
