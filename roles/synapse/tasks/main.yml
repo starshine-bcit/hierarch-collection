@@ -112,3 +112,30 @@
         state: restarted
         enabled: true
         daemon_reload: true
+- name: Install and configure element web
+  become: true
+  block:
+    - name: Download element web signing key
+      ansible.builtin.get_url:
+        url: https://packages.element.io/debian/element-io-archive-keyring.gpg
+        dest: /usr/share/keyrings/element-io-archive-keyring.gpg
+        owner: root
+        group: root
+        mode: '644'
+    - name: Add element web ppa
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/element-io-archive-keyring.gpg] https://packages.element.io/debian/ default main"
+        state: present
+    - name: Install element web package
+      ansible.builtin.apt:
+        pkg:
+          - element-web
+        state: present
+        update_cache: true
+    - name: Copy over config template
+      ansible.builtin.template:
+        src: config.json.j2
+        dest: /etc/element-web/config.json
+        owner: root
+        group: nginx
+        mode: '640'

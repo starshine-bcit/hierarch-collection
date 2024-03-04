@@ -72,6 +72,7 @@
             http:
               include:
                 - /etc/nginx/conf.d/*.conf
+                - /etc/nginx/mime.types
         nginx_config_http_template_enable: true
         nginx_config_http_template: "{{ http_templates }}"
     - name: Ensure we are using http2 for ssl enabled listens

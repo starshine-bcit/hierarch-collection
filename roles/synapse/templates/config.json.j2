@@ -1,0 +1,34 @@
+{
+    "default_server_name": "{{ mx_host }}",
+    "default_server_config": {
+        "m.homeserver": {
+            "base_url": "https://{{ mx_host }}/"
+        }
+    },
+    "brand": "Hierarch",
+    "bug_report_endpoint_url": "https://element.io/bugreports/submit",
+    "uisi_autorageshake_app": "element-auto-uisi",
+    "showLabsSettings": false,
+    "disable_custom_urls": true,
+    "default_federate": false,
+    "default_theme": "dark",
+    "disable_guests": true,
+    "sso_redirect_options": {
+        "immediate": true,
+        "on_welcome_page": false
+    },
+    "voip": {
+        "obey_asserted_identity": true
+    },
+    "enable_presence_by_hs_url": {
+        "https://matrix.org": false,
+        "https://matrix-client.matrix.org": false
+    },
+    "setting_defaults": {
+        "UIFeature.registration": false,
+        "UIFeature.deactivate": false,
+        "UIFeature.passwordReset": false,
+        "UIFeature.shareSocial": false,
+        "UIFeature.locationSharing": false
+    }
+}

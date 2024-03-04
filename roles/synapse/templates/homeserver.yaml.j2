@@ -3,7 +3,7 @@
 #
 
 pid_file: "/var/run/matrix-synapse.pid"
-web_client_location: https://{{ el_host }}/
+web_client_location: https://{{ mx_host }}/
 public_baseurl: https://{{ mx_host }}/
 serve_server_wellknown: true
 listeners:
@@ -36,7 +36,7 @@ email:
   notif_from: {{ mx_smtp_user }}
   enable_notifs: true
   notif_for_new_users: false
-  client_base_url: https://{{ el_host }}/
+  client_base_url: https://{{ mx_host }}/
   validation_token_lifetime: 15m
   subjects:
     message_from_person_in_room: "[%(app)s] You have a message on %(app)s from %(person)s in the %(room)s room..."
@@ -94,7 +94,7 @@ url_preview_url_blacklist:
   - scheme: 'http'
   - netloc: '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'
 oidc_providers:
-  - idp_id: keycloak
+  - idp_id: synapse
     idp_name: keycloak
     issuer: {{ oidc_realm_url }}
     client_id: synapse
@@ -110,7 +110,7 @@ oidc_providers:
         value: "true"
 sso:
     client_whitelist:
-      - https://{{ el_host }}/
+      - https://{{ mx_host }}/
     update_profile_information: true
 turn_uris:
   - "turn:{{ mx_host }}?transport=udp"
