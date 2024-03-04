@@ -1,0 +1,51 @@
+---
+- name: Prepare synapse system environment
+  become: true
+  block:
+    - name: Install apt dependencies
+      ansible.builtin.apt:
+        pkg:
+          - lsb-release
+          - wget
+          - apt-transport-https
+        state: present
+        update_cache: true
+    - name: Add matrix key
+      ansible.builtin.get_url:
+        url: https://packages.matrix.org/debian/matrix-org-archive-keyring.gpg
+        dest: /usr/share/keyrings/matrix-org-archive-keyring.gpg
+        owner: root
+        group: root
+        mode: '644'
+    - name: Add matrix ppa
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/matrix-org-archive-keyring.gpg] https://packages.matrix.org/debian/ bookworm main"
+        state: present
+    - name: Install synapse from matrix repo
+      ansible.builtin.apt:
+        pkg:
+          - matrix-synapse-py3
+        state: present
+        update_cache: true
+- name: Configure synapse
+  become: true
+  block:
+    - name: Copy over config template
+      ansible.builtin.template:
+        src: homeserver.yaml.j2
+        dest: /etc/matrix-synapse/conf.d/default.yaml
+        owner: root
+        group: matrix-synapse
+        mode: '640'
+    - name: Copy over server_name template
+      ansible.builtin.template:
+        src: server_name.yaml.j2
+        dest: /etc/matrix-synapse/conf.d/server_name.yaml
+        owner: root
+        group: matrix-synapse
+        mode: '640'
+    - name: Start/Restart synapse
+      ansible.builtin.systemd_service:
+        name: matrix-synapse
+        state: restarted
+        enabled: true

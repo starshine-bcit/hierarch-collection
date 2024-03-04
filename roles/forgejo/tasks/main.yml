@@ -12,6 +12,7 @@
           - git
           - git-lfs
           - wget
+          - acl
         state: present
         update_cache: true
 - name: Install and setup forgejo bin
@@ -73,24 +74,56 @@
         owner: root
         group: root
         mode: '755'
+    - name: Sleep while forgejo starts up
+      ansible.builtin.command:
+        cmd: "sleep 30"
+      become: false
+      changed_when: false
     - name: Check if admin user exists
       ansible.builtin.command:
-        cmd: "sleep 30 && forgejo admin user list --admin"
-      become: true
-      become_user: git
+        cmd: "forgejo -c /etc/forgejo/app.ini admin user list --admin"
       register: admins
       changed_when: false
+      become: true
+      become_user: git
     - name: Create admin user
       ansible.builtin.command:
-        cmd: "forgejo admin user create --admin --username \"{{ fj_user }}\" --password \"{{ fj_pass }}\" --email \"{{ fj_email }}\""
+        cmd: "forgejo -c /etc/forgejo/app.ini admin user create \
+          --admin --username \"{{ fj_user }}\" --password \"{{ fj_pass }}\" \
+          --email \"{{ fj_email }}\""
+      when: fj_user not in admins.stdout
       become: true
       become_user: git
-      when: fj_user not in admins.stdout
       changed_when: true
+      no_log: true
     - name: Update admin password
       ansible.builtin.command:
-        cmd: "forgejo admin user change-password --username \"{{ fj_user }}\" --password \"{{ fj_pass }}\""
-      become: true
-      become_user: git
+        cmd: "forgejo -c /etc/forgejo/app.ini admin user change-password \
+          --username \"{{ fj_user }}\" --password \"{{ fj_pass }}\""
       when: fj_user in admins.stdout
       changed_when: false
+      become: true
+      become_user: git
+      no_log: true
+    - name: Check if auth source exists
+      ansible.builtin.command:
+        cmd: "forgejo -c /etc/forgejo/app.ini admin auth list"
+      become: true
+      become_user: git
+      changed_when: false
+      register: auth
+    - name: Add authentication source
+      ansible.builtin.command:
+        cmd: "forgejo -c /etc/forgejo/app.ini admin auth add-oauth --name keycloak \
+          --provider openidConnect \
+          --key {{ oidc_id }} \
+          --secret {{ fj_client_secret }} \
+          --auto-discover-url \"{{ oidc_url }}\" --required-claim-name forgejo_user \
+          --required-claim-value \"true\" \
+          --group-claim-name forgejo_groups \
+          --admin-group forgejo_admin"
+      become: true
+      become_user: git
+      changed_when: true
+      when: oidc_id not in auth.stdout
+      no_log: true

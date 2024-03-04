@@ -11,127 +11,14 @@
           - openssl
           - acl
         update_cache: true
-- name: Configure keycloak postgres
+- name: Loop over provided DB configurations
+  ansible.builtin.include_tasks: db_config.yml
+  loop: "{{ db_databases }}"
+  no_log: true
+- name: Copy certs and configure config files for postgres
   become: true
-  become_user: postgres
+  become_user: root
   block:
-    - name: Create new database "{{ kc_db_name }}"
-      community.postgresql.postgresql_db:
-        name: "{{ kc_db_name }}"
-        encoding: UTF-8
-    - name: Create new database forgejo
-      community.postgresql.postgresql_db:
-        name: forgejo
-        encoding: UTF-8
-    - name: Add new user "{{ kc_db_user }}"
-      community.postgresql.postgresql_user:
-        db: "{{ kc_db_name }}"
-        user: "{{ kc_db_user }}"
-        password: "{{ kc_db_pass }}"
-        expires: "Infinity"
-    - name: Add new user "{{ fj_db_user }}"
-      community.postgresql.postgresql_user:
-        db: forgejo
-        user: "{{ fj_db_user }}"
-        password: "{{ fj_db_pass }}"
-        expires: "Infinity"
-    - name: Create new schema keycloak
-      community.postgresql.postgresql_schema:
-        db: "{{ kc_db_name }}"
-        name: keycloak
-        owner: postgres
-    - name: Create new schema forgejo
-      community.postgresql.postgresql_schema:
-        db: forgejo
-        name: forgejo
-        owner: postgres
-    - name: Grant schema privs
-      community.postgresql.postgresql_privs:
-        db: "{{ kc_db_name }}"
-        state: present
-        priv: ALL
-        type: schema
-        objs: keycloak
-        role: "{{ kc_db_user }}"
-    - name: Grant schema privs
-      community.postgresql.postgresql_privs:
-        db: forgejo
-        state: present
-        priv: ALL
-        type: schema
-        objs: forgejo
-        role: "{{ fj_db_user }}"
-    - name: Reassign ownership of db to "{{ kc_db_user }}"
-      community.postgresql.postgresql_owner:
-        db: "{{ kc_db_name }}"
-        new_owner: "{{ kc_db_user }}"
-    - name: Reassign ownership of forgejo db
-      community.postgresql.postgresql_owner:
-        db: forgejo
-        new_owner: "{{ fj_db_user }}"
-    - name: Setup permissions for "{{ kc_db_user }}"
-      community.postgresql.postgresql_privs:
-        db: postgres
-        state: present
-        privs: ALL
-        role: "{{ kc_db_user }}"
-        type: database
-        obj: "{{ kc_db_name }}"
-        grant_option: false
-    - name: Setup permissions for forgejo user
-      community.postgresql.postgresql_privs:
-        db: postgres
-        state: present
-        privs: ALL
-        role: "{{ fj_db_user }}"
-        type: database
-        obj: forgejo
-        grant_option: false
-    - name: Configure localhost pg_hba for "{{ kc_db_user }}"
-      community.postgresql.postgresql_pg_hba:
-        dest: /etc/postgresql/15/main/pg_hba.conf
-        databases: "{{ kc_db_name }}"
-        contype: local
-        users: "{{ kc_db_user }}"
-        method: scram-sha-256
-        mode: "640"
-        group: postgres
-        owner: postgres
-      when: kc_db_origin == "127.0.0.1"
-    - name: Configure remote pg_hba for "{{ kc_db_user }}"
-      community.postgresql.postgresql_pg_hba:
-        dest: /etc/postgresql/15/main/pg_hba.conf
-        databases: "{{ kc_db_name }}"
-        contype: host
-        address: "{{ kc_db_origin }}"
-        users: "{{ kc_db_user }}"
-        method: scram-sha-256
-        mode: "640"
-        group: postgres
-        owner: postgres
-      when: kc_db_origin != "127.0.0.1"
-    - name: Configure remote ipv4 pg_hba for forgejo
-      community.postgresql.postgresql_pg_hba:
-        dest: /etc/postgresql/15/main/pg_hba.conf
-        databases: forgejo
-        contype: host
-        address: "{{ hostvars['app01'].ansible_host }}"
-        users: "{{ fj_db_user }}"
-        method: scram-sha-256
-        mode: "640"
-        group: postgres
-        owner: postgres
-    - name: Configure remote ipv6 pg_hba for forgejo
-      community.postgresql.postgresql_pg_hba:
-        dest: /etc/postgresql/15/main/pg_hba.conf
-        databases: forgejo
-        contype: host
-        address: "{{ hostvars['app01'].ipv6 }}"
-        users: "{{ fj_db_user }}"
-        method: scram-sha-256
-        mode: "640"
-        group: postgres
-        owner: postgres
     - name: Copy letsencrypt cert file
       ansible.builtin.copy:
         remote_src: true
@@ -140,8 +27,6 @@
         owner: postgres
         group: postgres
         mode: '400'
-      become: true
-      become_user: root
     - name: Copy letsencrypt key file
       ansible.builtin.copy:
         remote_src: true
@@ -150,8 +35,6 @@
         owner: postgres
         group: postgres
         mode: '400'
-      become: true
-      become_user: root
     - name: Change ssl_cert_file config line
       ansible.builtin.lineinfile:
         path: /etc/postgresql/15/main/postgresql.conf
@@ -167,9 +50,17 @@
     - name: Set listen address to all
       ansible.builtin.lineinfile:
         path: /etc/postgresql/15/main/postgresql.conf
-        regexp: "listen_address = 'localhost'"
+        regexp: "listen_addresses = 'localhost'"
         backrefs: true
-        line: "listen_address = '*'"
+        line: "listen_addresses = '*'"
+      when: not db_is_local
+    - name: Set listen address to localhost
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/15/main/postgresql.conf
+        regexp: "listen_addresses = '*'"
+        backrefs: true
+        line: "listen_addresses = 'localhost'"
+      when: db_is_local
     - name: Change ssl config line
       ansible.builtin.lineinfile:
         path: /etc/postgresql/15/main/postgresql.conf
@@ -180,8 +71,7 @@
       ansible.builtin.systemd_service:
         name: postgresql
         state: restarted
-      become: true
-      become_user: root
+        enabled: true
     - name: Rebuild post-renewal hook
       ansible.builtin.template:
         src: post_hook.j2
@@ -189,5 +79,3 @@
         owner: root
         group: root
         mode: '750'
-      become: true
-      become_user: root
