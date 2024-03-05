@@ -1,0 +1,16 @@
+module.exports = {
+    enabled: true,
+    enforced: true,
+    cpPassword: false,
+    forceCpPassword: false,
+    list: [
+      {
+        name: 'keycloak',
+        type: 'oidc',
+        url: '{{ oidc_realm_url }}',
+        client_id: "cryptpad",
+        client_secret: "{{ doc_client_secret }}",
+        jwt_alg: 'RS256'
+      },
+    ]
+};

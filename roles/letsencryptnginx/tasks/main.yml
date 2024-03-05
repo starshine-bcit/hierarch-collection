@@ -7,6 +7,7 @@
         pkg:
           - cron
           - git
+          - openssl
         state: present
         update_cache: true
     - name: Install nginx role
@@ -49,6 +50,16 @@
         certbot_admin_email: "{{ admin_email }}"
         certbot_create_standalone_stop_services: "{{ stop_services }}"
         certbot_auto_renew_user: root
+    - name: Generate dhparam file
+      ansible.builtin.command:
+        cmd: openssl dhparam -out /etc/dhparam.pem 4096
+      changed_when: true
+    - name: Adjust permissions of output dhparam
+      ansible.builtin.file:
+        path: /etc/dhparam.pem
+        owner: root
+        group: nginx
+        mode: '640'
     - name: Configure nginx role
       ansible.builtin.import_role:
         name: nginxinc.nginx_config

@@ -1,0 +1,15 @@
+//
+// Managed by ansible
+//
+// customize/application_config.js
+
+define(['/common/application_config_internal.js'], function (AppConfig) {
+    AppConfig.surveyURL = "";
+    AppConfig.loginSalt = '{{ doc_login_salt }}';
+    AppConfig.registeredOnlyTypes = AppConfig.availablePadTypes;
+    AppConfig.defaultDarkTheme = 'true';
+    AppConfig.hostDescription = {
+        en: "Hierarch Cryptpad",
+    };
+    return AppConfig;
+});
