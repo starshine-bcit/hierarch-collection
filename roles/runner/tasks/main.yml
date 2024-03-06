@@ -1,0 +1,89 @@
+---
+- name: Setup system environment
+  become: true
+  block:
+    - name: Install required packages
+      ansible.builtin.apt:
+        pkg:
+          - acl
+        state: present
+        update_cache: true
+    - name: Create /opt if not exist
+      ansible.builtin.file:
+        state: directory
+        path: /opt
+        owner: root
+        group: root
+        mode: '755'
+    - name: Create runner user
+      ansible.builtin.user:
+        name: runner
+        state: present
+        groups: docker
+        system: true
+        password: '!'
+        create_home: false
+        home: "{{ runner_dir }}"
+    - name: Setup base dir
+      ansible.builtin.file:
+        state: directory
+        path: "{{ runner_dir }}"
+        owner: runner
+        group: runner
+        mode: '770'
+- name: Download and configure forgejo runner
+  become: true
+  become_user: runner
+  block:
+    - name: Download binary
+      ansible.builtin.get_url:
+        url: "{{ runner_download }}"
+        dest: "{{ runner_dir }}/fj-runner"
+        owner: runner
+        group: runner
+        mode: '770'
+    - name: Download gpg signature
+      ansible.builtin.get_url:
+        url: "{{ runner_verify_download }}"
+        dest: "{{ runner_dir }}/fj-runner.asc"
+        owner: runner
+        group: runner
+        mode: '640'
+    - name: Add gpg key
+      ansible.builtin.command:
+        cmd: "gpg --keyserver keys.openpgp.org --recv {{ runner_verify_fingerprint }}"
+      changed_when: true
+    - name: Verify signature
+      ansible.builtin.command:
+        cmd: "gpg --verify {{ runner_dir }}/fj-runner.asc {{ runner_dir }}/fj-runner"
+      changed_when: false
+    - name: Copy over config file
+      ansible.builtin.template:
+        src: config.yml.j2
+        dest: "{{ runner_dir }}/config.yml"
+        owner: runner
+        group: runner
+        mode: '640'
+    - name: Register runner
+      ansible.builtin.command:
+        cmd: "{{ runner_dir }}/fj-runner create-runner-file --instance https://{{ fj_host }} --secret {{ runner_secret }} --name runner"
+        chdir: "{{ runner_dir }}"
+      changed_when: true
+      become: true
+      become_user: runner
+- name: Configure and start runner service
+  become: true
+  block:
+    - name: Copy over service template
+      ansible.builtin.template:
+        src: runner.service.j2
+        dest: /etc/systemd/system/runner.service
+        owner: root
+        group: root
+        mode: '644'
+    - name: Start/Restart runner service
+      ansible.builtin.systemd_service:
+        name: runner
+        state: restarted
+        enabled: true
+        daemon_reload: true

@@ -128,3 +128,13 @@
       changed_when: true
       when: kc_name not in auth.stdout
       no_log: true
+    - name: Register runner
+      ansible.builtin.command:
+        cmd: "forgejo -c /etc/forgejo/app.ini forgejo-cli actions register \
+          --labels docker
+          --secret {{ runner_secret }} \
+          --name runner"
+      changed_when: false
+      become: true
+      become_user: git
+      no_log: true

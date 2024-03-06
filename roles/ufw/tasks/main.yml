@@ -1,0 +1,54 @@
+---
+- name: Install and configure ufw
+  become: true
+  block:
+    - name: Setup system environment
+      ansible.builtin.apt:
+        pkg:
+          - ufw
+        state: present
+        update_cache: true
+    - name: Configure default deny incoming
+      community.general.ufw:
+        default: incoming
+        direction: incoming
+        policy: deny
+    - name: Configure default allow outgoing
+      community.general.ufw:
+        default: outgoing
+        direction: outgoing
+        policy: allow
+    - name: Configure logging
+      community.general.ufw:
+        logging: low
+    - name: Configure allowed in tcp
+      community.general.ufw:
+        rule: allow
+        direction: in
+        proto: tcp
+        port: "{{ item }}"
+      loop: "{{ ufw_allowed_in['tcp'] }}"
+    - name: Configure allowed in udp
+      community.general.ufw:
+        rule: allow
+        direction: in
+        proto: udp
+        port: "{{ item }}"
+      loop: "{{ ufw_allowed_in['udp'] }}"
+    - name: Configure limit in tcp
+      community.general.ufw:
+        rule: limit
+        direction: in
+        proto: tcp
+        port: "{{ item }}"
+      loop: "{{ ufw_limit_in['tcp'] }}"
+    - name: Configure limit in udp
+      community.general.ufw:
+        rule: limit
+        direction: in
+        proto: udp
+        port: "{{ item }}"
+      loop: "{{ ufw_limit_in['udp'] }}"
+    - name: Ensure ufw is enabled
+      community.general.ufw:
+        state: enabled

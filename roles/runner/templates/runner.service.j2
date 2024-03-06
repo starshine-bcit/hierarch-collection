@@ -1,0 +1,13 @@
+[Unit]
+Description=Forgejo Runner
+
+[Service]
+Type=simple
+User=runner
+Group=runner
+ExecStart={{ runner_dir }}/fj-runner --config {{ runner_dir }}/config.yml daemon
+WorkingDirectory={{ runner_dir }}
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
