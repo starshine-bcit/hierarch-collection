@@ -50,10 +50,15 @@
         certbot_admin_email: "{{ admin_email }}"
         certbot_create_standalone_stop_services: "{{ stop_services }}"
         certbot_auto_renew_user: root
+    - name: Check if dhparam file exists
+      ansible.builtin.stat:
+        path: /etc/dhparam.pem
+      register: dhfile
     - name: Generate dhparam file
       ansible.builtin.command:
         cmd: openssl dhparam -out /etc/dhparam.pem 4096
       changed_when: true
+      when: not dhfile.stat.exists
     - name: Adjust permissions of output dhparam
       ansible.builtin.file:
         path: /etc/dhparam.pem

@@ -1,0 +1,34 @@
+name: orangehrm
+services:
+  db:
+    image: mariadb:10.4
+    hostname: db
+    restart: always
+    environment:
+      MARIADB_USER: dbuser
+      MARIADB_PASSWORD: {{ hr_db_pass }}
+      MARIADB_DATABASE: bby
+      MARIADB_ROOT_PASSWORD: {{ hr_db_root_pass }}
+    volumes:
+      - db_data:/var/lib/mysql
+    expose:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  hr:
+    image: orangehrm/orangehrm
+    hostname: hr
+    restart: always
+    expose:
+      - "80:80"
+    ports:
+      - "7654:80"
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+volumes:
+  db_data:

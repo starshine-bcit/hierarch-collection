@@ -15,6 +15,8 @@ SSH_DOMAIN = {{ fj_host }}
 SSH_PORT = 1001
 SSH_LISTEN_PORT = 1001
 ENABLE_ACME = false
+LFS_START_SERVER = true
+LFS_JWT_SECRET = {{ fj_lfs_secret }}
 
 [database]
 DB_TYPE = postgres
@@ -94,3 +96,7 @@ COOKIE_SECURE = true
 [actions]
 ENABLED = true
 DEFAULT_ACTIONS_URL = https://code.forgejo.org
+
+[lfs]
+STORAGE_TYPE = local
+PATH = ./lfs

@@ -1,0 +1,28 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/latest/configs/service-widgets
+
+- search:
+    provider: brave
+    target: _blank
+
+- openmeteo:
+    label: Vancouver
+    latitude: 49.246292
+    longitude: -123.116226
+    timezone: America/Vancouver
+    units: metric
+    cache: 5
+
+- datetime:
+    text_size: xl
+    format:
+        dateStyle: long
+        timeStyle: long
+
+- greeting:
+    text_size: xl
+    text: Welcome to Hierarch!
+
+- logo:
+    icon: mdi-crown-outline
