@@ -1,0 +1,74 @@
+location:
+  source_directories: {{ borg_source_dirs }}
+  repositories: {{ borg_repos }}
+  {# # Any paths matching these patterns are included/excluded from
+  # backups. Globs are expanded. (Tildes are not.) See the
+  # output of "borg help patterns" for more details. Quote any
+  # value if it contains leading punctuation, so it parses
+  # correctly. Note that only one of "patterns" and
+  # "source_directories" may be used.
+  # patterns:
+      # - R /
+      # - '- /home/*/.cache'
+      # - + /home/susan
+      # - '- /home/*'
+  # Any paths matching these patterns are excluded from backups.
+  # Globs and tildes are expanded. Note that a glob pattern must
+  # either start with a glob or be an absolute path. Do not
+  # backslash spaces in path names. See the output of "borg help
+  # patterns" for more details.
+  # exclude_patterns:
+      # - '*.pyc'
+      # - /home/*/.cache
+      # - '*/.vim*.tmp'
+      # - /etc/ssl
+      # - /home/user/path with spaces #}
+  exclude_if_present:
+    - .nobackup
+storage:
+  encryption_passphrase: "{{ borg_passphrase }}"
+  temporary_directory: /tmp
+  ssh_command: ssh -i /root/.ssh/borg_ssh
+retention:
+  keep_daily: 7
+  keep_weekly: 4
+  keep_monthly: 3
+consistency:
+  checks:
+    - name: repository
+    - name: data
+      frequency: 1 week
+    - name: extract
+      frequency: 2 weeks
+hooks:
+  before_actions:
+    - echo "Starting actions."
+  before_backup: {{ borg_before_backup }}
+  before_prune:
+    - echo "Starting pruning."
+  before_compact:
+    - echo "Starting compaction."
+  before_check:
+    - echo "Starting checks."
+  before_extract:
+    - echo "Starting extracting."
+  after_backup: {{ borg_after_backup }}
+  after_compact:
+    - echo "Finished compaction."
+  after_prune:
+    - echo "Finished pruning."
+  after_check:
+    - echo "Finished checks."
+  after_extract:
+    - echo "Finished extracting."
+  after_actions:
+    - echo "Finished actions."
+  on_error:
+    - echo "Error during prune/compact/create/check."
+  {% if pg_datases %}
+  postgresql_databases:
+    - name: all
+      username: postgres
+      format: directory
+      ssl_mode: disable
+  {% endif %}

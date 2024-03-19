@@ -22,3 +22,10 @@
         state: present
         pull: missing
         files: docker-compose.yml
+    - name: Copy over backup script template
+      ansible.builtin.template:
+        src: orange-backup.sh.j2
+        dest: /root/orange-backup
+        owner: root
+        group: root
+        mode: '700'
