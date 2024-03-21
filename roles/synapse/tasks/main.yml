@@ -93,7 +93,7 @@
     - name: Copy ssl cert over
       ansible.builtin.copy:
         remote_src: true
-        src: "/etc/letsencrypt/live/{{ domain_name }}-0001/fullchain.pem"
+        src: "{{ cert_file }}"
         dest: "/etc/turn_cert.pem"
         owner: root
         group: turnserver
@@ -101,7 +101,7 @@
     - name: Copy ssl key over
       ansible.builtin.copy:
         remote_src: true
-        src: "/etc/letsencrypt/live/{{ domain_name }}-0001/privkey.pem"
+        src: "{{ cert_key }}"
         dest: "/etc/turn_key.pem"
         owner: root
         group: turnserver

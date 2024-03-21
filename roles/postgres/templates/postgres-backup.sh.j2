@@ -2,9 +2,8 @@
 
 set -eu
 
-BACKUP_PATH="/var/orangeback"
-BACKUP_FILE="/var/orangeback/mysqldump.sql"
-CONTAINER_NAME="{{ hr_db_container }}"
+BACKUP_PATH="/var/pgback"
+BACKUP_FILE="/var/pgback/pgdump.sql"
 
 if [[ ! -d "$BACKUP_PATH" ]]; then
   if [[ -f "$BACKUP_PATH" ]]; then
@@ -13,6 +12,8 @@ if [[ ! -d "$BACKUP_PATH" ]]; then
     exit 1
   else
     mkdir "$BACKUP_PATH"
+    chown root:postgres "$BACKUP_PATH"
+    chmod 770 "$BACKUP_PATH"
   fi
 fi
 
@@ -20,4 +21,4 @@ if [[ -e "$BACKUP_FILE" ]]; then
   rm "$BACKUP_FILE"
 fi
 
-docker exec "$CONTAINER_NAME" /usr/bin/mysqldump -u root --password="{{ hr_db_root_pass }}" "{{ hr_db_name }}" > "$BACKUP_FILE"
+sudo -i -u postgres pg_dumpall --no-password --clean --if-exists > "$BACKUP_FILE"

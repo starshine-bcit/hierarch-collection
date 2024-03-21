@@ -15,25 +15,6 @@
   ansible.builtin.include_tasks: db_config.yml
   loop: "{{ db_databases }}"
   no_log: true
-- name: Add new superuser
-  community.postgresql.postgresql_user:
-    user: "{{ pg_super_name }}"
-    password: "{{ pg_super_pass }}"
-    expires: "Infinity"
-  become: true
-  become_user: postgres
-  no_log: true
-- name: Allow local superuser login
-  community.postgresql.postgresql_pg_hba:
-    dest: /etc/postgresql/15/main/pg_hba.conf
-    contype: local
-    users: "{{ pg_super_name }}"
-    method: scram-sha-256
-    mode: "640"
-    group: postgres
-    owner: postgres
-  become: true
-  become_user: postgres
 - name: Copy certs and configure config files for postgres
   become: true
   become_user: root
@@ -98,3 +79,10 @@
         owner: root
         group: root
         mode: '750'
+    - name: Copy over backup script template
+      ansible.builtin.template:
+        src: postgres-backup.sh.j2
+        dest: /root/postgres-backup
+        owner: root
+        group: root
+        mode: '700'
