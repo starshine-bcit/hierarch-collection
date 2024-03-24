@@ -55,3 +55,8 @@ hooks:
     - echo "Finished actions."
   on_error:
     - echo "Error during prune/compact/create/check."
+{% if pg_backup_databases %}
+  postgresql_databases:
+    - name: all
+      username: root
+{% endif %}

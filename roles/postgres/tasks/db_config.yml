@@ -22,7 +22,6 @@
     user: "{{ item.user }}"
     password: "{{ item.pass }}"
     expires: "Infinity"
-    role_attr_flags: SUPERUSER
   become: true
   become_user: postgres
 - name: Create new schema "{{ item.schema }}"
