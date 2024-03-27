@@ -1,5 +1,5 @@
 install_path: /opt/mailcow-dockerized
-timezone: Africa/Abidjan
+timezone: Etc/UTC
 install_updates: true
 redirect_http: true
 git_version: nightly

@@ -8,7 +8,6 @@ kc_env_file: "{{ kc_env_dir }}/keycloak.env"
 kc_bin_dir: "{{ kc_install_dir }}/bin"
 kc_conf_dir: "{{ kc_install_dir }}/conf"
 kc_db_url: "jdbc:postgresql://{{ kc_db_host }}:5432/{{ kc_db_name }}"
-# kc_db_url: "jdbc:postgresql://{{ kc_db_host }}:5432/{{ kc_db_name }};ssl=require;sslfactory=org.postgresql.ssl.NonValidatingFactory;"
 kc_java_opts: "-Xms1024m -Xmx2048m"
 kc_java_home: "/usr/lib/jvm/java-17-openjdk-amd64"
 kc_log_level: info
