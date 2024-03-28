@@ -1,18 +1,26 @@
+---
 argument_specs:
   main:
     short_description: Install and configure keycloak
     version_added: "1.0.0"
     options:
-      kc_db_name:
+      kc_root_user:
         required: true
         type: str
-      kc_db_origin:
+        no_log: true
+      kc_root_pass:
         required: true
         type: str
-      kc_realm_name:
+        no_log: true
+      kc_db_user:
         required: true
         type: str
-      kc_db_host:
+        no_log: true
+      kc_db_pass:
+        required: true
+        type: str
+        no_log: true
+      kc_realm:
         required: true
         type: str
       kc_public_hostname:
@@ -27,26 +35,20 @@ argument_specs:
       kc_admin_hostname:
         required: true
         type: str
-      kc_debug:
-        required: true
-        type: str
       kc_hostname_port:
-        required: true
+        required: false
         type: int
       kc_http_port:
-        required: true
+        required: false
         type: int
       kc_https_port:
-        required: true
+        required: false
         type: int
       kc_http_host:
-        required: true
+        required: false
         type: str
-      kc_https_enabled:
-        required: true
-        type: bool
       kc_proxy_mode:
-        required: true
+        required: false
         type: str
       kc_jdbc_jar:
         required: false
@@ -85,5 +87,14 @@ argument_specs:
         required: false
         type: str
       kc_log_level:
+        required: false
+        type: str
+      kc_debug:
+        required: false
+        type: bool
+      kc_db_name:
+        required: false
+        type: str
+      kc_db_host:
         required: false
         type: str

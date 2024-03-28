@@ -17,10 +17,6 @@ http-port={{ kc_http_port }}
 
 # HTTPS
 https-port={{ kc_https_port }}
-{% if kc_https_enabled %}
-https-certificate-file={{ kc_remote_cert }}
-https-certificate-key-file={{ kc_remote_key }}
-{% endif %}
 
 # Client URL configuration
 hostname-url={{ kc_public_url }}
