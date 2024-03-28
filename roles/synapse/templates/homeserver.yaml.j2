@@ -1,0 +1,120 @@
+#
+# Ansible managed
+#
+
+pid_file: "/var/run/matrix-synapse.pid"
+web_client_location: https://{{ mx_host }}/
+public_baseurl: https://{{ mx_host }}/
+serve_server_wellknown: true
+listeners:
+  - port: 7002
+    tls: false
+    type: http
+    x_forwarded: true
+    bind_addresses: ['::1', '127.0.0.1']
+    resources:
+      - names: [client, keys, media, openid]
+        compress: false
+database:
+  name: psycopg2
+  args:
+    user: {{ mx_db_user}}
+    password: {{ mx_db_pass }}
+    dbname: {{ mx_db_name }}
+    host: localhost
+    sslmode: require
+    cp_min: 5
+    cp_max: 10
+email:
+  smtp_host: {{ smtp_host }}
+  smtp_port: {{ smtp_port }}
+  smtp_user: {{ mx_smtp_user }}
+  smtp_pass: {{ mx_smtp_pass }}
+  smtp_port: 587
+  force_tls: true
+  require_transport_security: true
+  notif_from: {{ mx_smtp_user }}
+  enable_notifs: true
+  notif_for_new_users: false
+  client_base_url: https://{{ mx_host }}/
+  validation_token_lifetime: 15m
+  subjects:
+    message_from_person_in_room: "[%(app)s] You have a message on %(app)s from %(person)s in the %(room)s room..."
+    message_from_person: "[%(app)s] You have a message on %(app)s from %(person)s..."
+    messages_from_person: "[%(app)s] You have messages on %(app)s from %(person)s..."
+    messages_in_room: "[%(app)s] You have messages on %(app)s in the %(room)s room..."
+    messages_in_room_and_others: "[%(app)s] You have messages on %(app)s in the %(room)s room and others..."
+    messages_from_person_and_others: "[%(app)s] You have messages on %(app)s from %(person)s and others..."
+    invite_from_person_to_room: "[%(app)s] %(person)s has invited you to join the %(room)s room on %(app)s..."
+    invite_from_person: "[%(app)s] %(person)s has invited you to chat on %(app)s..."
+    password_reset: "[%(server_name)s] Password reset"
+    email_validation: "[%(server_name)s] Validate your email"
+
+log_config: "/etc/matrix-synapse/log.yaml"
+media_store_path: "/var/lib/matrix-synapse/media"
+signing_key_path: "/etc/matrix-synapse/homeserver.signing.key"
+trusted_key_servers: []
+allow_public_rooms_without_auth: false
+allow_public_rooms_over_federation: false
+federation_domain_whitelist:
+  - {{ mx_host }}
+suppress_key_server_warning: true
+registration_shared_secret: {{ mx_shared_secret }}
+registration_requires_token: true
+enable_registration: false
+password_config:
+  enabled: false
+auto_join_rooms:
+  - "#welcome:{{ mx_host }}"
+  - "#announcements:{{ mx_host }}"
+autocreate_auto_join_rooms: true
+max_upload_size: 50M
+url_preview_enabled: true
+url_preview_ip_range_blacklist:
+  - '127.0.0.0/8'
+  - '10.0.0.0/8'
+  - '172.16.0.0/12'
+  - '192.168.0.0/16'
+  - '100.64.0.0/10'
+  - '192.0.0.0/24'
+  - '169.254.0.0/16'
+  - '192.88.99.0/24'
+  - '198.18.0.0/15'
+  - '192.0.2.0/24'
+  - '198.51.100.0/24'
+  - '203.0.113.0/24'
+  - '224.0.0.0/4'
+  - '::1/128'
+  - 'fe80::/10'
+  - 'fc00::/7'
+  - '2001:db8::/32'
+  - 'ff00::/8'
+  - 'fec0::/10'
+url_preview_url_blacklist:
+  - scheme: 'http'
+  - netloc: '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'
+oidc_providers:
+  - idp_id: synapse
+    idp_name: keycloak
+    issuer: {{ oidc_realm_url }}
+    client_id: synapse
+    client_secret: {{ mx_client_secret }}
+    scopes: ["openid", "profile"]
+    user_mapping_provider:
+      config:
+        localpart_template: "{%raw%}{{ user.preferred_username }}{%endraw%}"
+        display_name_template: "{%raw%}{{ user.name }}{%endraw%}"
+    backchannel_logout_enabled: false
+    attribute_requirements:
+      - attribute: synapse_user
+        value: "true"
+sso:
+    client_whitelist:
+      - https://{{ mx_host }}/
+    update_profile_information: true
+turn_uris:
+  - "turn:{{ mx_host }}?transport=udp"
+  - "turn:{{ mx_host }}?transport=tcp"
+turn_shared_secret: {{ turn_auth_secret }}
+turn_user_lifetime: 86400000
+turn_allow_guests: true

@@ -1,0 +1,63 @@
+#
+# Managed by ansible
+#
+
+listening-port=3478
+tls-listening-port=5349
+alt-listening-port=3479
+alt-tls-listening-port=5350
+
+min-port=49152
+max-port=65535
+
+use-auth-secret
+static-auth-secret={{ turn_auth_secret }}
+
+#psql-userdb="host=<host> dbname=<database-name> user=<database-user> password=<database-user-password> connect_timeout=30"
+
+realm={{ mx_host }}
+
+no-tcp-relay
+
+cert=/etc/turn_cert.pem
+pkey=/etc/turn_key.pem
+
+#no-tls
+#no-dtls
+
+syslog
+
+no-software-attribute
+no-multicast-peers
+
+denied-peer-ip=10.0.0.0-10.255.255.255
+denied-peer-ip=192.168.0.0-192.168.255.255
+denied-peer-ip=172.16.0.0-172.31.255.255
+denied-peer-ip=0.0.0.0-0.255.255.255
+denied-peer-ip=100.64.0.0-100.127.255.255
+denied-peer-ip=127.0.0.0-127.255.255.255
+denied-peer-ip=169.254.0.0-169.254.255.255
+denied-peer-ip=192.0.0.0-192.0.0.255
+denied-peer-ip=192.0.2.0-192.0.2.255
+denied-peer-ip=192.88.99.0-192.88.99.255
+denied-peer-ip=198.18.0.0-198.19.255.255
+denied-peer-ip=198.51.100.0-198.51.100.255
+denied-peer-ip=203.0.113.0-203.0.113.255
+denied-peer-ip=240.0.0.0-255.255.255.255
+
+allowed-peer-ip={{ turn_allowed_peer_ip }}
+
+proc-user=turnserver
+proc-group=turnserver
+
+#no-cli
+cli-ip=127.0.0.1
+cli-port=5766
+cli-password={{ turn_cli_pass }}
+
+no-tlsv1
+no-tlsv1_1
+
+no-rfc5780
+no-stun-backward-compatibility
+response-origin-only-with-rfc5780

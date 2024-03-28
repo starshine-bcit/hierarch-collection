@@ -1,0 +1,62 @@
+location:
+  source_directories:
+{% for item in borg_source_dirs %}
+    - {{ item }}
+{% endfor %}
+  repositories:
+{% for item in borg_repos %}
+    - {{ item }}
+{% endfor %}
+  exclude_if_present:
+    - .nobackup
+storage:
+  encryption_passphrase: "{{ borg_passphrase }}"
+  temporary_directory: /tmp
+  ssh_command: ssh -i /root/.ssh/borg_ssh
+retention:
+  keep_daily: {{ keep_daily }}
+  keep_weekly: {{ keep_weekly }}
+  keep_monthly: {{ keep_monthly }}
+consistency:
+  checks:
+    - name: repository
+    - name: data
+      frequency: 1 week
+    - name: extract
+      frequency: 2 weeks
+hooks:
+  before_actions:
+    - echo "Starting actions."
+  before_backup:
+{% for item in borg_before_backup %}
+    - {{ item }}
+{% endfor %}
+  before_prune:
+    - echo "Starting pruning."
+  before_compact:
+    - echo "Starting compaction."
+  before_check:
+    - echo "Starting checks."
+  before_extract:
+    - echo "Starting extracting."
+  after_backup:
+{% for item in borg_after_backup %}
+    - {{ item }}
+{% endfor %}
+  after_compact:
+    - echo "Finished compaction."
+  after_prune:
+    - echo "Finished pruning."
+  after_check:
+    - echo "Finished checks."
+  after_extract:
+    - echo "Finished extracting."
+  after_actions:
+    - echo "Finished actions."
+  on_error:
+    - echo "Error during prune/compact/create/check."
+{% if pg_backup_databases %}
+  postgresql_databases:
+    - name: all
+      username: root
+{% endif %}

@@ -9,78 +9,94 @@
           - libpq-dev
           - python3-psycopg2
           - openssl
+          - acl
         update_cache: true
-- name: Configure keycloak postgres
+- name: Loop over provided DB configurations
+  ansible.builtin.include_tasks: db_config.yml
+  loop: "{{ db_databases }}"
+  no_log: true
+- name: Create new local superuser
+  community.postgresql.postgresql_user:
+    db: postgres
+    user: "{{ pg_super_name }}"
+    password: "{{ pg_super_pass }}"
+    expires: "Infinity"
+    role_attr_flags: SUPERUSER
   become: true
   become_user: postgres
+- name: Allow local authentication for superuser
+  community.postgresql.postgresql_pg_hba:
+    dest: /etc/postgresql/15/main/pg_hba.conf
+    databases: "all"
+    contype: local
+    users: "{{ pg_super_name }}"
+    method: peer
+    mode: "640"
+    group: postgres
+    owner: postgres
+  become: true
+  become_user: postgres
+- name: Copy certs and configure config files for postgres
+  become: true
+  become_user: root
   block:
-    - name: Copy certificate over
+    - name: Copy letsencrypt cert file
       ansible.builtin.copy:
-        src: "{{ kc_local_cert_file }}"
-        dest: /etc/postgresql/15/main/postgres.pem
-        owner: root
+        remote_src: true
+        src: "{{ postgres_remote_cert_file }}"
+        dest: "{{ postgres_local_cert_file }}"
+        owner: postgres
         group: postgres
-        mode: '640'
-    - name: Copy private key over
+        mode: '400'
+    - name: Copy letsencrypt key file
       ansible.builtin.copy:
-        src: "{{ kc_local_key_file }}"
-        dest: /etc/postgresql/15/main/postgres.key
+        remote_src: true
+        src: "{{ postgres_remote_key_file }}"
+        dest: "{{ postgres_local_key_file }}"
+        owner: postgres
+        group: postgres
+        mode: '400'
+    - name: Change ssl_cert_file config line
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/15/main/postgresql.conf
+        regexp: "^ssl_cert_file"
+        backrefs: true
+        line: "ssl_cert_file = '{{ postgres_local_cert_file }}'"
+    - name: Change ssl_key_file config line
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/15/main/postgresql.conf
+        regexp: "^ssl_key_file"
+        backrefs: true
+        line: "ssl_key_file = '{{ postgres_local_key_file }}'"
+    - name: Set listen address to all
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/15/main/postgresql.conf
+        regexp: "listen_addresses = 'localhost'"
+        backrefs: true
+        line: "listen_addresses = '*'"
+      when: not db_is_local
+    - name: Set listen address to localhost
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/15/main/postgresql.conf
+        regexp: "listen_addresses = '*'"
+        backrefs: true
+        line: "listen_addresses = 'localhost'"
+      when: db_is_local
+    - name: Change ssl config line
+      ansible.builtin.lineinfile:
+        path: /etc/postgresql/15/main/postgresql.conf
+        regexp: '^#?ssl\ ='
+        backrefs: true
+        line: "ssl = on"
+    - name: Restart postgres
+      ansible.builtin.systemd_service:
+        name: postgresql
+        state: restarted
+        enabled: true
+    - name: Rebuild post-renewal hook
+      ansible.builtin.template:
+        src: post_hook.j2
+        dest: /etc/letsencrypt/renewal-hooks/post/start_services
         owner: root
-        group: postgres
-        mode: '640'
-    - name: Create new database "{{ kc_db_name }}"
-      community.postgresql.postgresql_db:
-        name: "{{ kc_db_name }}"
-        encoding: UTF-8
-    - name: Add new user "{{ kc_db_user }}"
-      community.postgresql.postgresql_user:
-        db: "{{ kc_db_name }}"
-        user: "{{ kc_db_user }}"
-        password: "{{ kc_db_pass }}"
-        expires: "Infinity"
-    - name: Create new schema keycloak in "{{ kc_db_name }}"
-      community.postgresql.postgresql_schema:
-        name: keycloak
-        owner: "{{ kc_db_user }}"
-    - name: Setup permissions for "{{ kc_db_user }}"
-      community.postgresql.postgresql_privs:
-        db: postgres
-        privs: ALL
-        role: "{{ kc_db_user }}"
-        schema: keycloak
-        type: database
-        obj: "{{ kc_db_name }}"
-        grant_option: false
-    - name: Configure localhost pg_hba for "{{ kc_db_user }}"
-      community.postgresql.postgresql_pg_hba:
-        dest: /etc/postgresql/15/main/pg_hba.conf
-        databases: "{{ kc_db_name }}"
-        contype: local
-        users: "{{ kc_db_user }}"
-        method: scram-sha-256
-        mode: '640'
-        group: postgres
-        owner: postgres
-      when: kc_db_origin == "127.0.0.1"
-    - name: Configure remote pg_hba for "{{ kc_db_user }}"
-      community.postgresql.postgresql_pg_hba:
-        dest: /etc/postgresql/15/main/pg_hba.conf
-        databases: "{{ kc_db_name }}"
-        contype: host
-        address: "{{ kc_db_origin }}"
-        users: "{{ kc_db_user }}"
-        method: scram-sha-256
-        mode: '640'
-        group: postgres
-        owner: postgres
-      when: kc_db_origin != "127.0.0.1"
-    - name: Configure SSL cert file
-      community.postgresql.postgresql_set:
-        db: postgres
-        name: ssl_cert_file
-        value: /etc/postgresql/15/main/postgres.pem
-    - name: Configure SSL key file
-      community.postgresql.postgresql_set:
-        db: postgres
-        name: ssl_key_file
-        value: /etc/postgresql/15/main/postgres.key
+        group: root
+        mode: '750'

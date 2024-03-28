@@ -1,0 +1,36 @@
+argument_specs:
+  main:
+    short_description: Configure automatic backups with borgmatic
+    version_added: "1.0.0"
+    options:
+      borg_source_dirs:
+        required: true
+        type: list
+      borg_repos:
+        required: true
+        type: list
+      borg_passphrase:
+        required: true
+        type: str
+        no_log: true
+      borg_config_file:
+        required: false
+        type: str
+      pg_backup_databases:
+        required: false
+        type: bool
+      borg_before_backup:
+        required: false
+        type: list
+      borg_after_backup:
+        required: false
+        type: list
+      keep_daily:
+        required: false
+        type: int
+      keep_weekly:
+        required: false
+        type: int
+      keep_monthly:
+        required: false
+        type: int

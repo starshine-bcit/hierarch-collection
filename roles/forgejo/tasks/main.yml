@@ -1,0 +1,140 @@
+---
+- name: Prepare system environment
+  become: true
+  block:
+    - name: Install system packages
+      ansible.builtin.apt:
+        pkg:
+          - python3
+          - python3-pip
+          - virtualenv
+          - curl
+          - git
+          - git-lfs
+          - wget
+          - acl
+        state: present
+        update_cache: true
+- name: Install and setup forgejo bin
+  become: true
+  block:
+    - name: Download forgejo binary
+      ansible.builtin.get_url:
+        url: "{{ fj_download_link }}"
+        dest: "/usr/local/bin/forgejo"
+        owner: root
+        group: root
+        mode: '755'
+    - name: Make git user
+      ansible.builtin.user:
+        name: git
+        state: present
+        system: true
+        password: '!'
+        create_home: true
+        home: "/home/git"
+    - name: Create forgejo var dir
+      ansible.builtin.file:
+        state: directory
+        path: /var/lib/forgejo
+        owner: git
+        group: git
+        mode: '750'
+    - name: Create forgejo etc dir
+      ansible.builtin.file:
+        state: directory
+        path: /etc/forgejo
+        owner: root
+        group: git
+        mode: '770'
+    - name: Copy over systemd service
+      ansible.builtin.template:
+        src: forgejo.service.j2
+        dest: "/etc/systemd/system/forgejo.service"
+        owner: root
+        group: root
+        mode: '644'
+    - name: Copy over app.ini template
+      ansible.builtin.template:
+        src: app.ini.j2
+        dest: "/etc/forgejo/app.ini"
+        owner: root
+        group: git
+        mode: '660'
+    - name: Start/restart forgejo service
+      ansible.builtin.systemd_service:
+        name: forgejo
+        state: restarted
+        enabled: true
+        daemon_reload: true
+    - name: Copy over forgejo script
+      ansible.builtin.template:
+        src: forgejo.sh.j2
+        dest: "/usr/local/bin/forgejo.sh"
+        owner: root
+        group: root
+        mode: '755'
+    - name: Sleep while forgejo starts up
+      ansible.builtin.pause:
+        seconds: 30
+    - name: Check if admin user exists
+      ansible.builtin.command:
+        cmd: "forgejo -c /etc/forgejo/app.ini admin user list --admin"
+      register: admins
+      changed_when: false
+      become: true
+      become_user: git
+    - name: Create admin user
+      ansible.builtin.command:
+        cmd: "forgejo -c /etc/forgejo/app.ini admin user create \
+          --admin --username \"{{ fj_user }}\" --password \"{{ fj_pass }}\" \
+          --email \"{{ fj_email }}\""
+      when: fj_user not in admins.stdout
+      become: true
+      become_user: git
+      changed_when: true
+      no_log: true
+    - name: Update admin password
+      ansible.builtin.command:
+        cmd: "forgejo -c /etc/forgejo/app.ini admin user change-password \
+          --username \"{{ fj_user }}\" --password \"{{ fj_pass }}\""
+      when: fj_user in admins.stdout
+      changed_when: false
+      become: true
+      become_user: git
+      no_log: true
+    - name: Check if auth source exists
+      ansible.builtin.command:
+        cmd: "forgejo -c /etc/forgejo/app.ini admin auth list"
+      become: true
+      become_user: git
+      changed_when: false
+      register: auth
+    - name: Add authentication source
+      ansible.builtin.command:
+        cmd: "forgejo -c /etc/forgejo/app.ini admin \
+          auth add-oauth \
+          --name keycloak \
+          --provider openidConnect \
+          --key {{ fj_oidc_id }} \
+          --secret {{ fj_client_secret }} \
+          --auto-discover-url \"{{ oidc_url }}\" \
+          --required-claim-name forgejo_user \
+          --required-claim-value \"true\" \
+          --group-claim-name forgejo_groups \
+          --admin-group forgejo_admin"
+      become: true
+      become_user: git
+      changed_when: true
+      when: kc_name not in auth.stdout
+      no_log: true
+    - name: Register runner
+      ansible.builtin.command:
+        cmd: "forgejo -c /etc/forgejo/app.ini forgejo-cli actions register \
+          --labels docker
+          --secret {{ runner_secret }} \
+          --name runner"
+      changed_when: false
+      become: true
+      become_user: git
+      no_log: true

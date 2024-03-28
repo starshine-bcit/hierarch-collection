@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -eu
+
+BACKUP_PATH="/var/orangeback"
+BACKUP_FILE="/var/orangeback/mysqldump.sql"
+CONTAINER_NAME="{{ hr_db_container }}"
+
+if [[ ! -d "$BACKUP_PATH" ]]; then
+  if [[ -f "$BACKUP_PATH" ]]; then
+    exit 1
+  elif [[ -L "$BACKUP_PATH" ]]; then
+    exit 1
+  else
+    mkdir "$BACKUP_PATH"
+  fi
+fi
+
+if [[ -e "$BACKUP_FILE" ]]; then
+  rm "$BACKUP_FILE"
+fi
+
+docker exec "$CONTAINER_NAME" /usr/bin/mysqldump -u root --password="{{ hr_db_root_pass }}" "{{ hr_db_name }}" > "$BACKUP_FILE"

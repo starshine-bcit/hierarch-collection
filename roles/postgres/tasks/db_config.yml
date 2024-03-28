@@ -1,0 +1,114 @@
+---
+- name: Create new database "{{ item.name }}"
+  community.postgresql.postgresql_db:
+    name: "{{ item.name }}"
+    encoding: UTF-8
+    lc_collate: "{{ item.collate }}"
+    lc_ctype: "{{ item.collate }}"
+    template: template0
+  become: true
+  become_user: postgres
+  when: item.collate != ""
+- name: Create new database "{{ item.name }}"
+  community.postgresql.postgresql_db:
+    name: "{{ item.name }}"
+    encoding: UTF-8
+  become: true
+  become_user: postgres
+  when: item.collate == ""
+- name: Add new user "{{ item.user }}"
+  community.postgresql.postgresql_user:
+    db: "{{ item.name }}"
+    user: "{{ item.user }}"
+    password: "{{ item.pass }}"
+    expires: "Infinity"
+  become: true
+  become_user: postgres
+- name: Create new schema "{{ item.schema }}"
+  community.postgresql.postgresql_schema:
+    db: "{{ item.name }}"
+    name: "{{ item.schema }}"
+    owner: postgres
+  become: true
+  become_user: postgres
+  when: not item.public_schema
+- name: Grant schema privs
+  community.postgresql.postgresql_privs:
+    db: "{{ item.name }}"
+    state: present
+    priv: ALL
+    type: schema
+    objs: "{{ item.schema }}"
+    role: "{{ item.user }}"
+  become: true
+  become_user: postgres
+  when: not item.public_schema
+- name: Grant schema public privs
+  community.postgresql.postgresql_privs:
+    db: "{{ item.name }}"
+    state: present
+    priv: ALL
+    type: schema
+    objs: public
+    role: "{{ item.user }}"
+  become: true
+  become_user: postgres
+  when: item.public_schema
+- name: Reassign ownership of db
+  community.postgresql.postgresql_owner:
+    db: "{{ item.name }}"
+    new_owner: "{{ item.user }}"
+  become: true
+  become_user: postgres
+- name: Setup permissions for "{{ item.user }}"
+  community.postgresql.postgresql_privs:
+    db: postgres
+    state: present
+    privs: ALL
+    role: "{{ item.user }}"
+    type: database
+    obj: "{{ item.name }}"
+    grant_option: false
+  become: true
+  become_user: postgres
+- name: Configure localhost pg_hba
+  community.postgresql.postgresql_pg_hba:
+    dest: /etc/postgresql/15/main/pg_hba.conf
+    databases: "{{ item.name }}"
+    contype: local
+    users: "{{ item.user }}"
+    method: scram-sha-256
+    mode: "640"
+    group: postgres
+    owner: postgres
+  when: item.origin == "127.0.0.1"
+  become: true
+  become_user: postgres
+- name: Configure remote pg_hba ipv4
+  community.postgresql.postgresql_pg_hba:
+    dest: /etc/postgresql/15/main/pg_hba.conf
+    databases: "{{ item.name }}"
+    contype: host
+    address: "{{ item.origin }}"
+    users: "{{ item.user }}"
+    method: scram-sha-256
+    mode: "640"
+    group: postgres
+    owner: postgres
+  when: item.origin != "127.0.0.1"
+  become: true
+  become_user: postgres
+- name: Configure remote pg_hba ipv6
+  community.postgresql.postgresql_pg_hba:
+    dest: /etc/postgresql/15/main/pg_hba.conf
+    databases: forgejo
+    contype: host
+    address: "{{ item.ipv6_origin }}"
+    users: "{{ item.user }}"
+    method: scram-sha-256
+    mode: "640"
+    group: postgres
+    owner: postgres
+  when: item.origin != "127.0.0.1" and ipv6_origin != ""
+  become: true
+  become_user: postgres

@@ -1,0 +1,21 @@
+#!/bin/bash
+# {{ ansible_managed }}
+
+{% for item in stop_services %}
+echo "starting service {{ item }}"
+{% if ansible_service_mgr == 'systemd' %}
+systemctl start {{ item }}
+{% elif ansible_service_mgr == 'upstart' %}
+initctl start {{ item }}
+{% elif ansible_service_mgr == 'openrc' %}
+rc-service {{ item }} start
+{% else %}
+service {{ item }} start
+{% endif %}
+{% endfor %}
+cp {{ postgres_remote_cert_file }} {{ postgres_local_cert_file }}
+chown postgres:postgres {{ postgres_local_cert_file }}
+chmod 400 {{ postgres_local_cert_file }}
+cp {{ postgres_remote_key_file }} {{ postgres_local_key_file }}
+chown postgres:postgres {{ postgres_local_key_file }}
+chmod 400 {{ postgres_local_key_file }}

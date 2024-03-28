@@ -1,0 +1,141 @@
+---
+- name: Prepare synapse system environment
+  become: true
+  block:
+    - name: Install apt dependencies
+      ansible.builtin.apt:
+        pkg:
+          - lsb-release
+          - wget
+          - apt-transport-https
+          - libxml2-dev
+          - python3-lxml
+          - coturn
+        state: present
+        update_cache: true
+    - name: Add matrix key
+      ansible.builtin.get_url:
+        url: https://packages.matrix.org/debian/matrix-org-archive-keyring.gpg
+        dest: /usr/share/keyrings/matrix-org-archive-keyring.gpg
+        owner: root
+        group: root
+        mode: '644'
+    - name: Add matrix ppa
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/matrix-org-archive-keyring.gpg] https://packages.matrix.org/debian/ bookworm main"
+        state: present
+    - name: Install synapse from matrix repo
+      ansible.builtin.apt:
+        pkg:
+          - matrix-synapse-py3
+        state: present
+        update_cache: true
+- name: Configure synapse
+  become: true
+  block:
+    - name: Copy over config template
+      ansible.builtin.template:
+        src: homeserver.yaml.j2
+        dest: /etc/matrix-synapse/conf.d/default.yaml
+        owner: root
+        group: matrix-synapse
+        mode: '640'
+    - name: Copy over server_name template
+      ansible.builtin.template:
+        src: server_name.yaml.j2
+        dest: /etc/matrix-synapse/conf.d/server_name.yaml
+        owner: root
+        group: matrix-synapse
+        mode: '640'
+    - name: Start/Restart synapse
+      ansible.builtin.systemd_service:
+        name: matrix-synapse
+        state: restarted
+        enabled: true
+    - name: Pause while synapse starts up
+      ansible.builtin.pause:
+        seconds: 15
+    - name: Register new matrix user
+      ansible.builtin.command:
+        cmd: "register_new_matrix_user \
+          --user {{ mx_user }} \
+          --password {{ mx_pass }} \
+          --admin \
+          --config /etc/matrix-synapse/conf.d/default.yaml"
+      register: output
+      changed_when: true
+      no_log: true
+      failed_when: output.rc == 100
+- name: Configure coturn
+  become: true
+  block:
+    - name: Create systemd override dir
+      ansible.builtin.file:
+        state: directory
+        dest: /etc/systemd/system/coturn.service.d
+        owner: root
+        group: root
+        mode: '755'
+    - name: Copy over systemd override
+      ansible.builtin.template:
+        src: override.conf.j2
+        dest: /etc/systemd/system/coturn.service.d/override.conf
+        owner: root
+        group: root
+        mode: '644'
+    - name: Copy over turn config
+      ansible.builtin.template:
+        src: turnserver.conf.j2
+        dest: /etc/turnserver.conf
+        owner: root
+        group: turnserver
+        mode: '640'
+    - name: Copy ssl cert over
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ cert_file }}"
+        dest: "/etc/turn_cert.pem"
+        owner: root
+        group: turnserver
+        mode: '640'
+    - name: Copy ssl key over
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ cert_key }}"
+        dest: "/etc/turn_key.pem"
+        owner: root
+        group: turnserver
+        mode: '640'
+    - name: Start/Restart coturn
+      ansible.builtin.systemd_service:
+        name: coturn
+        state: restarted
+        enabled: true
+        daemon_reload: true
+- name: Install and configure element web
+  become: true
+  block:
+    - name: Download element web signing key
+      ansible.builtin.get_url:
+        url: https://packages.element.io/debian/element-io-archive-keyring.gpg
+        dest: /usr/share/keyrings/element-io-archive-keyring.gpg
+        owner: root
+        group: root
+        mode: '644'
+    - name: Add element web ppa
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/element-io-archive-keyring.gpg] https://packages.element.io/debian/ default main"
+        state: present
+    - name: Install element web package
+      ansible.builtin.apt:
+        pkg:
+          - element-web
+        state: present
+        update_cache: true
+    - name: Copy over config template
+      ansible.builtin.template:
+        src: config.json.j2
+        dest: /etc/element-web/config.json
+        owner: root
+        group: nginx
+        mode: '640'

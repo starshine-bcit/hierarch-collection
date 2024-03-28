@@ -1,0 +1,110 @@
+---
+- name: Setup system environment
+  become: true
+  block:
+    - name: Install necessary packages
+      ansible.builtin.apt:
+        pkg:
+          - git
+          - nodejs
+          - npm
+          - acl
+        state: present
+        update_cache: true
+    - name: Install yarn
+      ansible.builtin.command:
+        cmd: npm install --global yarn
+      changed_when: true
+    - name: Create homepage user
+      ansible.builtin.user:
+        name: homepage
+        state: present
+        system: true
+        password: '!'
+        create_home: false
+        home: "{{ hp_home_dir }}"
+    - name: Create home dir for homepage
+      ansible.builtin.file:
+        state: directory
+        path: "{{ hp_home_dir }}"
+        owner: homepage
+        group: homepage
+        mode: '750'
+- name: Install and configure linkstack
+  become: true
+  become_user: homepage
+  block:
+    - name: Clone the repo
+      ansible.builtin.git:
+        repo: "{{ hp_repo }}"
+        dest: "{{ hp_base_dir }}"
+        depth: 1
+        version: "{{ hp_version }}"
+    - name: Do yarn install
+      ansible.builtin.command:
+        cmd: "{{ yarn_bin }} install"
+        chdir: "{{ hp_base_dir }}"
+      changed_when: true
+    - name: Do yarn build
+      ansible.builtin.command:
+        cmd: "{{ yarn_bin }} build"
+        chdir: "{{ hp_base_dir }}"
+      changed_when: true
+    - name: Copy over services template
+      ansible.builtin.template:
+        src: services.yaml.j2
+        dest: "{{ hp_base_dir }}/config/services.yaml"
+        owner: homepage
+        group: homepage
+        mode: '640'
+    - name: Copy over settings template
+      ansible.builtin.template:
+        src: settings.yaml.j2
+        dest: "{{ hp_base_dir }}/config/settings.yaml"
+        owner: homepage
+        group: homepage
+        mode: '640'
+    - name: Copy over widgets template
+      ansible.builtin.template:
+        src: widgets.yaml.j2
+        dest: "{{ hp_base_dir }}/config/widgets.yaml"
+        owner: homepage
+        group: homepage
+        mode: '640'
+    - name: Copy over bookmarks template
+      ansible.builtin.template:
+        src: bookmarks.yaml.j2
+        dest: "{{ hp_base_dir }}/config/bookmarks.yaml"
+        owner: homepage
+        group: homepage
+        mode: '640'
+    - name: Create public images directory
+      ansible.builtin.file:
+        state: directory
+        path: "{{ hp_base_dir }}/public/images"
+        owner: homepage
+        group: homepage
+        mode: '755'
+    - name: Copy over background image
+      ansible.builtin.copy:
+        src: resource/hr_background.jpg
+        dest: "{{ hp_base_dir }}/public/images/hr_background.jpg"
+        owner: homepage
+        group: homepage
+        mode: '640'
+- name: Configure and start systemd service
+  become: true
+  block:
+    - name: Copy over unit file template
+      ansible.builtin.template:
+        src: homepage.service.j2
+        dest: "/etc/systemd/system/homepage.service"
+        owner: root
+        group: root
+        mode: '644'
+    - name: Start/Restart homepage service
+      ansible.builtin.systemd_service:
+        name: homepage
+        state: restarted
+        daemon_reload: true
+        enabled: true

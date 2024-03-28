@@ -1,0 +1,59 @@
+[Unit]
+Description=CryptPad API server
+
+[Service]
+ExecStart=/usr/bin/node {{ doc_base_dir }}/server.js
+WorkingDirectory={{ doc_base_dir }}
+
+Restart=always
+RestartSec=2
+
+# Proper logging to journald
+StandardOutput=journal
+StandardError=journal+console
+
+User=cryptpad
+Group=cryptpad
+Environment='PWD="{{ doc_base_dir }}"'
+
+LimitNOFILE=1000000
+
+# hardening directives as per https://www.freedesktop.org/software/systemd/man/systemd.exec.html
+# check those with systemd-analyze security cryptpad.service for more information
+# Proc filesystem
+ProcSubset=all
+ProtectProc=invisible
+# Capabilities
+CapabilityBoundingSet=
+# Security
+NoNewPrivileges=true
+# Sandboxing
+ProtectSystem=strict
+PrivateTmp=true
+PrivateDevices=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET
+RestrictAddressFamilies=AF_INET6
+RestrictAddressFamilies=AF_NETLINK
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RemoveIPC=true
+PrivateMounts=true
+ProtectClock=true
+# System Call Filtering
+SystemCallArchitectures=native
+SystemCallFilter=~@cpu-emulation @debug @keyring @ipc @mount @obsolete @privileged @setuid
+SystemCallFilter=@chown
+SystemCallFilter=pipe
+SystemCallFilter=pipe2
+ReadWritePaths={{ doc_base_dir }}
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,19 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Keycloak Server
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile={{ kc_env_file}}
+PIDFile=/run/keycloak/keycloak.pid
+ExecStart={{ kc_bin_dir }}/kc.sh start
+StandardOutput=append:/var/log/keycloak/keycloak.log
+StandardError=append:/var/log/keycloak/error.log
+User=keycloak
+Group=keycloak
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

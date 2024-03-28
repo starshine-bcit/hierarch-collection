@@ -1,0 +1,5 @@
+---
+runner_dir: /opt/runner
+runner_labels:
+  - 'docker:docker://debian:bookworm'
+runner_capacity: 2

@@ -1,0 +1,68 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure synapse-related services
+    version_added: "1.0.0"
+    options:
+      mx_db_user:
+        required: true
+        type: str
+      mx_db_pass:
+        required: true
+        type: str
+        no_log: true
+      mx_db_name:
+        required: true
+        type: str
+      smtp_host:
+        required: true
+        type: str
+      smtp_port:
+        required: true
+        type: str
+      mx_smtp_user:
+        required: true
+        type: str
+        no_log: true
+      mx_smtp_pass:
+        required: true
+        type: str
+        no_log: true
+      mx_shared_secret:
+        required: true
+        type: str
+        no_log: true
+      mx_client_secret:
+        required: true
+        type: str
+        no_log: true
+      oidc_realm_url:
+        required: true
+        type: str
+      turn_auth_secret:
+        required: true
+        type: str
+        no_log: true
+      turn_allowed_peer_ip:
+        required: true
+        type: str
+      turn_cli_pass:
+        required: true
+        type: str
+        no_log: true
+      mx_host:
+        required: true
+        type: str
+      mx_user:
+        required: true
+        type: str
+      mx_pass:
+        required: true
+        type: str
+        no_log: true
+      cert_file:
+        required: true
+        type: str
+      cert_key:
+        required: true
+        type: str

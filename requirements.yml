@@ -2,3 +2,9 @@
 collections:
   - name: community.postgresql
   - name: community.crypto
+roles:
+  - name: nginxinc.nginx_config
+  - name: nginxinc.nginx
+  - name: mailcow.mailcow
+  - name: geerlingguy.certbot
+  - name: haxorof.docker_ce

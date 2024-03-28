@@ -1,0 +1,13 @@
+[Unit]
+Description=Homepage service
+
+[Service]
+Type=simple
+User=homepage
+Group=homepage
+ExecStart={{ yarn_bin }} start
+WorkingDirectory={{ hp_base_dir }}
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

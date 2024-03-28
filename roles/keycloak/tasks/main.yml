@@ -1,0 +1,92 @@
+---
+- name: Install & Configure Keycloak Quarkus
+  become: true
+  block:
+    - name: Install Prerequisites
+      ansible.builtin.apt:
+        pkg:
+          - unzip
+          - procps
+          - initscripts
+          - tzdata
+          - openjdk-17-jre-headless
+          - openjdk-17-jdk-headless
+          - python3-pexpect
+        update_cache: true
+    - name: Create keycloak system user
+      ansible.builtin.user:
+        name: keycloak
+        home: "{{ kc_home_dir }}"
+        system: true
+        create_home: false
+    - name: Create install location
+      ansible.builtin.file:
+        path: "{{ kc_install_dir }}"
+        state: directory
+        owner: keycloak
+        group: keycloak
+        mode: '750'
+    - name: Download keycloak archive
+      ansible.builtin.get_url:
+        url: "{{ kc_download_url }}"
+        dest: "resource/{{ kc_download_bundle }}"
+        mode: '640'
+      delegate_to: localhost
+      run_once: true
+      become: false
+    - name: Copy keycloak archive to host
+      ansible.builtin.copy:
+        src: "resource/{{ kc_download_bundle }}"
+        dest: "{{ kc_home_dir }}/{{ kc_download_bundle }}"
+        owner: keycloak
+        group: keycloak
+        mode: '640'
+    - name: Extract keycloak archive on host
+      ansible.builtin.unarchive:
+        remote_src: true
+        src: "{{ kc_home_dir }}/{{ kc_download_bundle }}"
+        dest: "{{ kc_home_dir }}"
+        creates: "{{ kc_install_dir }}/bin/"
+        owner: keycloak
+        group: keycloak
+    - name: Create log dir
+      ansible.builtin.file:
+        path: /var/log/keycloak
+        state: directory
+        owner: root
+        group: keycloak
+        mode: '770'
+    - name: Create env directory
+      ansible.builtin.file:
+        path: "{{ kc_env_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '750'
+    - name: Configure env file
+      ansible.builtin.template:
+        src: keycloak.env.j2
+        dest: "{{ kc_env_file }}"
+        owner: root
+        group: root
+        mode: '640'
+    - name: Configure keycloak config file
+      ansible.builtin.template:
+        src: keycloak.conf.j2
+        dest: "{{ kc_conf_dir }}/keycloak.conf"
+        owner: keycloak
+        group: keycloak
+        mode: '640'
+    - name: Configure systemd unit file
+      ansible.builtin.template:
+        src: keycloak.service.j2
+        dest: /etc/systemd/system/keycloak.service
+        owner: root
+        group: root
+        mode: '644'
+    - name: Enable and start systemd service
+      ansible.builtin.systemd_service:
+        name: keycloak
+        state: restarted
+        enabled: true
+        daemon_reload: true

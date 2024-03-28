@@ -1,0 +1,22 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure wikijs
+    version_added: "1.0.0"
+    options:
+      wk_home_dir:
+        required: false
+        type: str
+      wk_base_dir:
+        required: false
+        type: str
+      wk_db_user:
+        required: true
+        type: str
+      wk_db_pass:
+        required: true
+        type: str
+        no_log: true
+      wk_db_name:
+        required: true
+        type: str

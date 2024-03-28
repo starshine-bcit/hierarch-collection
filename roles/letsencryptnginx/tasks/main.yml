@@ -1,0 +1,103 @@
+---
+- name: Install/Configure nginx and certbot
+  become: true
+  block:
+    - name: Install cron and update cache
+      ansible.builtin.apt:
+        pkg:
+          - cron
+          - git
+          - openssl
+        state: present
+        update_cache: true
+    - name: Install nginx role
+      ansible.builtin.import_role:
+        name: nginxinc.nginx
+      vars:
+        nginx_branch: stable
+        nginx_modules:
+          - geoip
+          - njs
+        nginx_logrotate_conf_enabled: true
+        nginx_logrotate_conf:
+          paths: /var/log/nginx/*.log
+          options:
+            - daily
+            - missingok
+            - rotate 14
+            - compress
+            - delaycompress
+            - notifempty
+            - sharedscripts
+    - name: Install certbot role with auto renewal
+      ansible.builtin.include_role:
+        name: geerlingguy.certbot
+      vars:
+        certbot_install_method: package
+        certbot_auto_renew: true
+        certbot_auto_renew_hour: "3"
+        certbot_auto_renew_minute: "30"
+        certbot_auto_renew_options: "--quiet"
+        certbot_create_if_missing: true
+        certbot_create_method: standalone
+        certbot_testmode: false
+        certbot_hsts: false
+        certbot_repo: https://github.com/certbot/certbot.git
+        certbot_version: master
+        certbot_keep_updated: true
+        certbot_dir: /opt/certbot
+        certbot_certs: "{{ certs }}"
+        certbot_admin_email: "{{ admin_email }}"
+        certbot_create_standalone_stop_services: "{{ stop_services }}"
+        certbot_auto_renew_user: root
+    - name: Check if dhparam file exists
+      ansible.builtin.stat:
+        path: /etc/dhparam.pem
+      register: dhfile
+    - name: Generate dhparam file
+      ansible.builtin.command:
+        cmd: openssl dhparam -out /etc/dhparam.pem 4096
+      changed_when: true
+      when: not dhfile.stat.exists
+    - name: Adjust permissions of output dhparam
+      ansible.builtin.file:
+        path: /etc/dhparam.pem
+        owner: root
+        group: nginx
+        mode: '640'
+    - name: Configure nginx role
+      ansible.builtin.import_role:
+        name: nginxinc.nginx_config
+      vars:
+        nginx_config_debug_output: true
+        nginx_config_selinux: false
+        nginx_config_main_template_enable: true
+        nginx_config_main_template:
+          template_file: nginx.conf.j2
+          deployment_location: /etc/nginx/nginx.conf
+          backup: true
+          config:
+            main:
+              load_module:
+                - modules/ngx_http_js_module.so
+              user:
+                username: nginx
+                group: nginx
+              pid: /var/run/nginx.pid
+              daemon: true
+            http:
+              include:
+                - /etc/nginx/conf.d/*.conf
+                - /etc/nginx/mime.types
+        nginx_config_http_template_enable: true
+        nginx_config_http_template: "{{ http_templates }}"
+    - name: Ensure we are using http2 for ssl enabled listens
+      ansible.builtin.replace:
+        path: "{{ item }}"
+        regexp: '^(\s{4}listen.*ssl.*);$'
+        replace: '\1 http2;'
+      loop: "{{ nginx_confs }}"
+    - name: Reload nginx
+      ansible.builtin.systemd_service:
+        name: nginx
+        state: reloaded

@@ -1,0 +1,115 @@
+---
+- name: Configure system environment
+  become: true
+  block:
+    - name: Install required packages
+      ansible.builtin.apt:
+        pkg:
+          - nodejs
+          - git
+          - npm
+          - acl
+        state: present
+        update_cache: true
+    - name: Create /opt if not exist
+      ansible.builtin.file:
+        state: directory
+        path: /opt
+        owner: root
+        group: root
+        mode: '755'
+    - name: Create new user
+      ansible.builtin.user:
+        name: cryptpad
+        state: present
+        system: true
+        password: '!'
+        create_home: false
+        home: "{{ doc_home_dir }}"
+    - name: Create cryptpad home dir
+      ansible.builtin.file:
+        state: directory
+        path: "{{ doc_home_dir }}"
+        owner: cryptpad
+        group: cryptpad
+        mode: '770'
+- name: Clone and setup cryptpad
+  become: true
+  block:
+    - name: Clone the cryptpad repo
+      ansible.builtin.git:
+        repo: "{{ doc_repo }}"
+        dest: "{{ doc_base_dir }}"
+        version: "{{ doc_version }}"
+        depth: 1
+      become: true
+      become_user: cryptpad
+    - name: Clone the cryptpad sso plugin
+      ansible.builtin.git:
+        repo: "{{ doc_sso_repo }}"
+        dest: "{{ doc_base_dir }}/lib/plugins/sso"
+        depth: 1
+    - name: Npm install stuff
+      community.general.npm:
+        path: "{{ doc_base_dir }}"
+        ci: true
+      become: true
+      become_user: cryptpad
+    - name: Npm run install components
+      ansible.builtin.command:
+        chdir: "{{ doc_base_dir }}"
+        cmd: npm run install:components
+      changed_when: true
+      become: true
+      become_user: cryptpad
+    - name: Copy over config template
+      ansible.builtin.template:
+        src: config.js.j2
+        dest: "{{ doc_base_dir }}/config/config.js"
+        owner: root
+        group: cryptpad
+        mode: '640'
+      become: true
+      become_user: root
+    - name: Copy over sso template
+      ansible.builtin.template:
+        src: sso.js.j2
+        dest: "{{ doc_base_dir }}/config/sso.js"
+        owner: root
+        group: cryptpad
+        mode: '640'
+    - name: Create customize dir if not exist
+      ansible.builtin.file:
+        state: directory
+        path: "{{ doc_base_dir }}/customize"
+        owner: root
+        group: cryptpad
+        mode: '750'
+      become: true
+      become_user: root
+    - name: Copy over customize template
+      ansible.builtin.template:
+        src: application_config.js.j2
+        dest: "{{ doc_base_dir }}/customize/application_config.js"
+        owner: root
+        group: cryptpad
+        mode: '640'
+      become: true
+      become_user: root
+    - name: Copy over systemd service
+      ansible.builtin.template:
+        src: cryptpad.service.j2
+        dest: /etc/systemd/system/cryptpad.service
+        owner: root
+        group: root
+        mode: '644'
+      become: true
+      become_user: root
+    - name: Start/Restart systemd service
+      ansible.builtin.systemd_service:
+        name: cryptpad
+        state: restarted
+        enabled: true
+        daemon_reload: true
+      become: true
+      become_user: root

@@ -1,0 +1,36 @@
+---
+- name: Configure system environment
+  become: true
+  block:
+    - name: Install necessary packages
+      ansible.builtin.apt:
+        pkg:
+          - borgmatic
+        update_cache: true
+        state: present
+- name: Configure borgmatic
+  become: true
+  block:
+    - name: Ensure borgmatic config dir exists
+      ansible.builtin.file:
+        state: directory
+        path: /etc/borgmatic
+        owner: root
+        group: root
+        mode: '700'
+    - name: Copy over config file template
+      ansible.builtin.template:
+        src: borgmatic.yaml.j2
+        dest: "{{ borg_config_file }}"
+        owner: root
+        group: root
+        mode: '600'
+      no_log: true
+    - name: Copy over ssh priv key
+      ansible.builtin.copy:
+        src: "resource/borg_ssh"
+        dest: "/root/.ssh/borg_ssh"
+        owner: root
+        group: root
+        mode: '400'
+      no_log: true

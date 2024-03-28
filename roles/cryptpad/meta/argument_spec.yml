@@ -1,35 +1,38 @@
 ---
 argument_specs:
   main:
-    short_description: Install and configure postgres
+    short_description: Install and configure cryptpad
     version_added: "1.0.0"
     options:
-      db_databases:
-        required: true
-        type: list
-      pg_super_name:
+      doc_client_secret:
         required: true
         type: str
         no_log: true
-      pg_super_pass:
+      oidc_realm_url:
+        required: true
+        type: str
+      doc_login_salt:
         required: true
         type: str
         no_log: true
-      postgres_remote_cert_file:
+      doc_host:
         required: true
         type: str
-      postgres_remote_key_file:
+      sandbox_host:
         required: true
         type: str
-      db_hostname:
+      doc_home_dir:
         required: false
         type: str
-      db_is_local:
-        required: false
-        type: bool
-      postgres_local_cert_file:
+      doc_base_dir:
         required: false
         type: str
-      postgres_local_key_file:
+      doc_repo:
+        required: false
+        type: str
+      doc_sso_repo:
+        required: false
+        type: str
+      doc_admin_keys:
         required: false
         type: str

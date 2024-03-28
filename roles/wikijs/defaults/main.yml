@@ -1,0 +1,3 @@
+---
+wk_home_dir: "/srv/wikijs"
+wk_base_dir: "{{ wk_home_dir }}/wiki"

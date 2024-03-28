@@ -1,0 +1,12 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure ufw
+    version_added: "1.0.0"
+    options:
+      ufw_allowed_in:
+        type: dict
+        required: true
+      ufw_limit_in:
+        type: dict
+        required: true

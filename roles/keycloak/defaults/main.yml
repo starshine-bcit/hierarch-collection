@@ -1,0 +1,23 @@
+---
+kc_jdbc_jar: postgresql-42.7.2.jar
+kc_download_url: https://github.com/keycloak/keycloak/releases/download/23.0.7/keycloak-23.0.7.zip
+kc_download_bundle: keycloak-23.0.7.zip
+kc_home_dir: /opt/keycloak
+kc_install_dir: "{{ kc_home_dir }}/keycloak-23.0.7"
+kc_env_dir: /etc/keycloak
+kc_env_file: "{{ kc_env_dir }}/keycloak.env"
+kc_bin_dir: "{{ kc_install_dir }}/bin"
+kc_conf_dir: "{{ kc_install_dir }}/conf"
+kc_db_url: "jdbc:postgresql://{{ kc_db_host }}:5432/{{ kc_db_name }}"
+kc_java_opts: "-Xms1024m -Xmx2048m"
+kc_java_home: "/usr/lib/jvm/java-17-openjdk-amd64"
+kc_log_level: info
+kc_db_host: localhost
+kc_hostname_path: "/"
+kc_debug: false
+kc_db_name: keycloak
+kc_hostname_port: 7000
+kc_http_port: 7000
+kc_https_port: 7001
+kc_http_host: "0.0.0.0"
+kc_proxy_mode: edge

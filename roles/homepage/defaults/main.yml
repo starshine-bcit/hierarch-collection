@@ -1,0 +1,12 @@
+---
+hp_repo: "https://github.com/gethomepage/homepage.git"
+hp_version: "v0.8.8"
+hp_home_dir: "/opt/homepage"
+hp_base_dir: "{{ hp_home_dir }}/hp"
+yarn_bin: "/usr/local/bin/yarn"
+hp_background_image: "/images/hr_background.jpg"
+hp_om_label: Vancouver
+hp_om_lat: 49.246292
+hp_om_long: -123.116226
+hp_om_tz: America/Vancouver
+hp_greeting: Welcome to Hierarch!

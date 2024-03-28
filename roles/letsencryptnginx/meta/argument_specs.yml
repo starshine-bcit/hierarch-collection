@@ -1,0 +1,30 @@
+---
+argument_specs:
+  main:
+    short_description: Install and nginx with letsencrypt
+    version_added: "1.0.0"
+    options:
+      certs:
+        type: list
+        required: true
+      admin_email:
+        type: str
+        required: true
+      server_names:
+        type: list
+        required: true
+      stop_services:
+        type: list
+        required: true
+      cert_file:
+        type: str
+        required: true
+      cert_key:
+        type: str
+        required: true
+      http_templates:
+        type: list
+        required: true
+      nginx_confs:
+        type: list
+        required: true

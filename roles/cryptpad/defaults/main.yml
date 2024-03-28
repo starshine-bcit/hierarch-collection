@@ -1,0 +1,7 @@
+---
+doc_home_dir: "/opt/cryptpad"
+doc_base_dir: "{{ doc_home_dir }}/doc"
+doc_version: "5.7.0"
+doc_repo: "https://github.com/cryptpad/cryptpad.git"
+doc_sso_repo: "https://github.com/cryptpad/sso"
+doc_admin_keys: "[]"

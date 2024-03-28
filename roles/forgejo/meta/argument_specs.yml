@@ -1,0 +1,86 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure forgejo
+    version_added: "1.0.0"
+    options:
+      fj_host:
+        required: true
+        type: str
+      fj_lfs_secret:
+        required: true
+        type: str
+        no_log: true
+      db_hostname:
+        required: true
+        type: str
+      fj_db_user:
+        required: true
+        type: str
+      fj_db_pass:
+        required: true
+        type: str
+        no_log: true
+      fj_secret_key:
+        required: true
+        type: str
+        no_log: true
+      fj_mailer_from:
+        required: true
+        type: str
+      kc_hostname:
+        required: true
+        type: str
+      smtp_type:
+        required: true
+        type: str
+      smtp_host:
+        required: true
+        type: str
+      fj_smtp_user:
+        required: true
+        type: str
+      fj_smtp_pass:
+        required: true
+        type: str
+        no_log: true
+      fj_internal_key:
+        required: true
+        type: str
+        no_log: true
+      runner_secret:
+        required: true
+        type: str
+        no_log: true
+      fj_client_secret:
+        required: true
+        type: str
+        no_log: true
+      fj_download_link:
+        required: true
+        type: str
+      fj_user:
+        required: true
+        type: str
+      fj_pass:
+        required: true
+        type: str
+        no_log: true
+      fj_email:
+        required: true
+        type: str
+      oidc_url:
+        required: true
+        type: str
+      fj_oidc_id:
+        required: false
+        type: str
+      fj_http_port:
+        required: false
+        type: str
+      fj_ssh_port:
+        required: false
+        type: str
+      kc_name:
+        required: false
+        type: str

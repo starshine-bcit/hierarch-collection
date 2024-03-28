@@ -1,0 +1,23 @@
+
+port: 7003
+db:
+  type: postgres
+  host: localhost
+  port: 5432
+  user: {{ wk_db_user }}
+  pass: {{ wk_db_pass }}
+  db: {{ wk_db_name }}
+  ssl: false
+  sslOptions:
+    auto: true
+  schema: {{ wk_db_name }}
+ssl:
+  enabled: false
+pool:
+bindIP: 0.0.0.0
+logLevel: info
+logFormat: default
+offline: false
+ha: false
+dataPath: ./data
+bodyParserLimit: 5mb

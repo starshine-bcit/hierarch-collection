@@ -1,0 +1,5 @@
+---
+db_hostname: localhost
+db_is_local: true
+postgres_local_cert_file: /etc/postgresql/15/main/cert.pem
+postgres_local_key_file: /etc/postgresql/15/main/privkey.pem

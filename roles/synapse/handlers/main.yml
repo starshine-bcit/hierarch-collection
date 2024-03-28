@@ -1,9 +1,9 @@
 ---
-- name: Restart postgres
+- name: Restart synapse
   ansible.builtin.systemd_service:
-    name: postgresql
+    name: matrix-synapse
     state: restarted
     enabled: true
   become: true
   become_user: root
-  listen: "restart postgres"
+  listen: "restart synapse"

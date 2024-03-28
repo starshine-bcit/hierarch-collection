@@ -1,0 +1,100 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure keycloak
+    version_added: "1.0.0"
+    options:
+      kc_root_user:
+        required: true
+        type: str
+        no_log: true
+      kc_root_pass:
+        required: true
+        type: str
+        no_log: true
+      kc_db_user:
+        required: true
+        type: str
+        no_log: true
+      kc_db_pass:
+        required: true
+        type: str
+        no_log: true
+      kc_realm:
+        required: true
+        type: str
+      kc_public_hostname:
+        required: true
+        type: str
+      kc_admin_url:
+        required: true
+        type: str
+      kc_public_url:
+        required: true
+        type: str
+      kc_admin_hostname:
+        required: true
+        type: str
+      kc_hostname_port:
+        required: false
+        type: int
+      kc_http_port:
+        required: false
+        type: int
+      kc_https_port:
+        required: false
+        type: int
+      kc_http_host:
+        required: false
+        type: str
+      kc_proxy_mode:
+        required: false
+        type: str
+      kc_jdbc_jar:
+        required: false
+        type: str
+      kc_download_url:
+        required: false
+        type: str
+      kc_download_bundle:
+        required: false
+        type: str
+      kc_home_dir:
+        required: false
+        type: str
+      kc_install_dir:
+        required: false
+        type: str
+      kc_env_dir:
+        required: false
+        type: str
+      kc_env_file:
+        required: false
+        type: str
+      kc_bin_dir:
+        required: false
+        type: str
+      kc_conf_dir:
+        required: false
+        type: str
+      kc_db_url:
+        required: false
+        type: str
+      kc_java_opts:
+        required: false
+        type: str
+      kc_java_home:
+        required: false
+        type: str
+      kc_log_level:
+        required: false
+        type: str
+      kc_debug:
+        required: false
+        type: bool
+      kc_db_name:
+        required: false
+        type: str
+      kc_db_host:
+        required: false
+        type: str
