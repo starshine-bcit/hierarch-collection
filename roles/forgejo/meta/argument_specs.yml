@@ -81,3 +81,6 @@ argument_specs:
       fj_ssh_port:
         required: false
         type: str
+      kc_name:
+        required: false
+        type: str

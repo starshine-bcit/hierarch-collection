@@ -2,3 +2,4 @@
 fj_oidc_id: forgejo
 fj_ssh_port: "1001"
 fj_http_port: "7001"
+kc_name: keycloak
