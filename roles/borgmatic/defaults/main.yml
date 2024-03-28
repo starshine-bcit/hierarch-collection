@@ -1,0 +1,10 @@
+---
+borg_config_file: /etc/borgmatic/config.yaml
+pg_backup_databases: false
+borg_before_backup:
+  - echo "Starting backup."
+borg_after_backup:
+  - echo "Finished backup."
+keep_daily: 7
+keep_weekly: 4
+keep_monthly: 3

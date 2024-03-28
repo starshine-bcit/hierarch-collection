@@ -100,10 +100,3 @@
         owner: root
         group: root
         mode: '750'
-    - name: Copy over backup script template
-      ansible.builtin.template:
-        src: postgres-backup.sh.j2
-        dest: /root/postgres-backup
-        owner: root
-        group: root
-        mode: '700'

@@ -1,6 +1,6 @@
 # Ansible Collection - sfey.hierarch
 
-This collection is comprised of a number of ansible roles used in the [main hierarch repository](https://github.com/starshine-bcit/hierarch).
+This collection is comprised of 13 ansible roles used in the [main hierarch repository](https://github.com/starshine-bcit/hierarch).
 
 ## Role Descriptions
 

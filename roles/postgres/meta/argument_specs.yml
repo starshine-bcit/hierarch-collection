@@ -1,0 +1,35 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure postgres
+    version_added: "1.0.0"
+    options:
+      db_databases:
+        required: true
+        type: list
+      pg_super_name:
+        required: true
+        type: str
+        no_log: true
+      pg_super_pass:
+        required: true
+        type: str
+        no_log: true
+      postgres_remote_cert_file:
+        required: true
+        type: str
+      postgres_remote_key_file:
+        required: true
+        type: str
+      db_hostname:
+        required: false
+        type: str
+      db_is_local:
+        required: false
+        type: bool
+      postgres_local_cert_file:
+        required: false
+        type: str
+      postgres_local_key_file:
+        required: false
+        type: str

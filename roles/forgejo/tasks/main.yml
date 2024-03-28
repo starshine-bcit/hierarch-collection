@@ -116,7 +116,7 @@
           auth add-oauth \
           --name keycloak \
           --provider openidConnect \
-          --key {{ oidc_id }} \
+          --key {{ fj_oidc_id }} \
           --secret {{ fj_client_secret }} \
           --auto-discover-url \"{{ oidc_url }}\" \
           --required-claim-name forgejo_user \

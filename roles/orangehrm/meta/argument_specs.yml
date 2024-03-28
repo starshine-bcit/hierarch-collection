@@ -1,0 +1,23 @@
+---
+argument_specs:
+  main:
+    short_description: Install and run orangehrm in docker
+    version_added: "1.0.0"
+    options:
+      hr_db_pass:
+        type: str
+        required: true
+        no_log: true
+      hr_db_root_pass:
+        type: str
+        required: true
+        no_log: true
+      hr_base_dir:
+        type: str
+        required: false
+      hr_db_container:
+        type: str
+        required: false
+      hr_db_name:
+        type: str
+        required: false

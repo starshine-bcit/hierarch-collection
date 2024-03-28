@@ -1,0 +1,27 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure forgejo-runner
+    version_added: "1.0.0"
+    options:
+      fj_host:
+        required: true
+        type: str
+      runner_download:
+        required: true
+        type: str
+      runner_verify_download:
+        required: true
+        type: str
+      runner_verify_fingerprint:
+        required: true
+        type: str
+      runner_dir:
+        required: false
+        type: str
+      runner_labels:
+        required: false
+        type: list
+      runner_capacity:
+        required: false
+        type: int

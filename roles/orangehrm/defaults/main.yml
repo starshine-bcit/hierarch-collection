@@ -1,0 +1,4 @@
+---
+hr_base_dir: "/opt/orangehrm"
+hr_db_container: orangehrm-db-1
+hr_db_name: orange

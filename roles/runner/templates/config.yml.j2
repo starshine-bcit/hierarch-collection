@@ -4,10 +4,9 @@
 
 log:
   level: info
-
 runner:
   file: .runner
-  capacity: 2
+  capacity: {{ runner_capacity }}
   # envs:
   #   A_TEST_ENV_NAME_1: a_test_env_value_1
   #   A_TEST_ENV_NAME_2: a_test_env_value_2
@@ -16,14 +15,12 @@ runner:
   insecure: false
   fetch_timeout: 10s
   fetch_interval: 2s
-  labels: ['docker:docker://debian:bookworm']
-
+  labels: {{ runner_labels }}
 cache:
   enabled: true
   dir: ""
   host: ""
   port: 0
-
 container:
   network: ""
   privileged: false
@@ -32,6 +29,5 @@ container:
   valid_volumes:
     - '**'
   docker_host: ""
-
 host:
   workdir_parent:

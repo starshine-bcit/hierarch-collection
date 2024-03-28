@@ -1,0 +1,38 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure cryptpad
+    version_added: "1.0.0"
+    options:
+      doc_client_secret:
+        required: true
+        type: str
+        no_log: true
+      oidc_realm_url:
+        required: true
+        type: str
+      doc_login_salt:
+        required: true
+        type: str
+        no_log: true
+      doc_host:
+        required: true
+        type: str
+      sandbox_host:
+        required: true
+        type: str
+      doc_home_dir:
+        required: false
+        type: str
+      doc_base_dir:
+        required: false
+        type: str
+      doc_repo:
+        required: false
+        type: str
+      doc_sso_repo:
+        required: false
+        type: str
+      doc_admin_keys:
+        required: false
+        type: str

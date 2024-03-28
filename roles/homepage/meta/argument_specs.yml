@@ -1,0 +1,42 @@
+---
+argument_specs:
+  main:
+    short_description: Install and configure homepage
+    version_added: "1.0.0"
+    options:
+      root_domain:
+        required: true
+        type: str
+      hp_repo:
+        required: false
+        type: str
+      hp_version:
+        required: false
+        type: str
+      hp_home_dir:
+        required: false
+        type: str
+      hp_base_dir:
+        required: false
+        type: str
+      yarn_bin:
+        required: false
+        type: str
+      hp_background_image:
+        required: false
+        type: str
+      hp_om_label:
+        required: false
+        type: str
+      hp_om_lat:
+        required: false
+        type: float
+      hp_om_long:
+        required: false
+        type: float
+      hp_om_tz:
+        required: false
+        type: str
+      hp_greeting:
+        required: false
+        type: str

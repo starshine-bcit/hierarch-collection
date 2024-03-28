@@ -1,23 +1,30 @@
+---
 argument_specs:
   main:
-    short_description: Setup server with Let's Encrypt cert and renewal
-    version_added: "0.1.0"
+    short_description: Setup mailcow dockerized
+    version_added: "1.0.0"
     options:
       hostname:
         required: true
+        type: str
       git_version:
         required: true
+        type: str
         options:
           nightly:
           master:
       acme_contact:
         required: true
+        type: str
       additional_san:
         required: false
+        type: str
       install_path:
         required: false
+        type: str
       timezone:
         required: false
+        type: str
       install_updates:
         required: false
         type: bool
