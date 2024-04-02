@@ -1,6 +1,7 @@
 ---
-- name: Install/Configure nginx and certbot
+- name: Setup system environment
   become: true
+  tags: install
   block:
     - name: Install cron and update cache
       ansible.builtin.apt:
@@ -10,6 +11,9 @@
           - openssl
         state: present
         update_cache: true
+- name: Install nginx and cerbot
+  become: true
+  block:
     - name: Install nginx role
       ansible.builtin.import_role:
         name: nginxinc.nginx
@@ -29,6 +33,7 @@
             - delaycompress
             - notifempty
             - sharedscripts
+      tags: install
     - name: Install certbot role with auto renewal
       ansible.builtin.include_role:
         name: geerlingguy.certbot
@@ -50,6 +55,13 @@
         certbot_admin_email: "{{ admin_email }}"
         certbot_create_standalone_stop_services: "{{ stop_services }}"
         certbot_auto_renew_user: root
+      tags:
+        - setup
+        - install
+- name: Configure nginx
+  become: true
+  tags: setup
+  block:
     - name: Check if dhparam file exists
       ansible.builtin.stat:
         path: /etc/dhparam.pem

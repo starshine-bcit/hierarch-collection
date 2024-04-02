@@ -1,6 +1,9 @@
 ---
 - name: Install orangehrm docker
   become: true
+  tags:
+    - setup
+    - install
   block:
     - name: Create dir if not exist
       ansible.builtin.file:

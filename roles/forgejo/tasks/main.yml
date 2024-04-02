@@ -1,6 +1,7 @@
 ---
 - name: Prepare system environment
   become: true
+  tags: install
   block:
     - name: Install system packages
       ansible.builtin.apt:
@@ -15,8 +16,9 @@
           - acl
         state: present
         update_cache: true
-- name: Install and setup forgejo bin
+- name: Install forgejo
   become: true
+  tags: install
   block:
     - name: Download forgejo binary
       ansible.builtin.get_url:
@@ -47,6 +49,10 @@
         owner: root
         group: git
         mode: '770'
+- name: Install and setup forgejo bin
+  become: true
+  tags: setup
+  block:
     - name: Copy over systemd service
       ansible.builtin.template:
         src: forgejo.service.j2
