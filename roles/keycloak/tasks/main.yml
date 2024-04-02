@@ -1,6 +1,7 @@
 ---
-- name: Install & Configure Keycloak Quarkus
+- name: Setup system environment
   become: true
+  tags: install
   block:
     - name: Install Prerequisites
       ansible.builtin.apt:
@@ -13,6 +14,10 @@
           - openjdk-17-jdk-headless
           - python3-pexpect
         update_cache: true
+- name: Install keycloak
+  become: true
+  tags: install
+  block:
     - name: Create keycloak system user
       ansible.builtin.user:
         name: keycloak
@@ -63,6 +68,10 @@
         owner: root
         group: root
         mode: '750'
+- name: Configure keycloak
+  become: true
+  tags: setup
+  block:
     - name: Configure env file
       ansible.builtin.template:
         src: keycloak.env.j2

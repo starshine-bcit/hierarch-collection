@@ -10,9 +10,11 @@
           - curl
         state: present
         update_cache: true
+      tags: install
     - name: Install docker-ce role
       ansible.builtin.import_role:
         name: haxorof.docker_ce
+      tags: install
     - name: Install mailcow role
       ansible.builtin.import_role:
         name: mailcow.mailcow
@@ -25,3 +27,4 @@
         mailcow__install_updates: "{{ install_updates }}"
         mailcow__redirect_http_to_https: "{{ redirect_http }}"
         mailcow__config_acme_contact: "{{ acme_contact }}"
+      tags: setup

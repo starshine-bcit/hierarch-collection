@@ -1,6 +1,7 @@
 ---
 - name: Configure system environment
   become: true
+  tags: install
   block:
     - name: Install required packages
       ansible.builtin.apt:
@@ -33,10 +34,11 @@
         owner: cryptpad
         group: cryptpad
         mode: '770'
-- name: Clone and setup cryptpad
+- name: Clone cryptpad and install deps
   become: true
+  tags: install
   block:
-    - name: Clone the cryptpad repo
+    - name: Clone the cryptpad repos
       ansible.builtin.git:
         repo: "{{ doc_repo }}"
         dest: "{{ doc_base_dir }}"
@@ -62,6 +64,10 @@
       changed_when: true
       become: true
       become_user: cryptpad
+- name: Configure cryptpad
+  become: true
+  tags: setup
+  block:
     - name: Copy over config template
       ansible.builtin.template:
         src: config.js.j2

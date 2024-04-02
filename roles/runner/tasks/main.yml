@@ -1,6 +1,7 @@
 ---
 - name: Setup system environment
   become: true
+  tags: install
   block:
     - name: Install required packages
       ansible.builtin.apt:
@@ -31,9 +32,10 @@
         owner: runner
         group: runner
         mode: '770'
-- name: Download and configure forgejo runner
+- name: Install runner
   become: true
   become_user: runner
+  tags: install
   block:
     - name: Download binary
       ansible.builtin.get_url:
@@ -57,6 +59,10 @@
       ansible.builtin.command:
         cmd: "gpg --verify {{ runner_dir }}/fj-runner.asc {{ runner_dir }}/fj-runner"
       changed_when: false
+- name: Configure and start runner service
+  become: true
+  tags: setup
+  block:
     - name: Copy over config file
       ansible.builtin.template:
         src: config.yml.j2
@@ -71,9 +77,6 @@
       changed_when: true
       become: true
       become_user: runner
-- name: Configure and start runner service
-  become: true
-  block:
     - name: Copy over service template
       ansible.builtin.template:
         src: runner.service.j2

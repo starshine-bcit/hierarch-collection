@@ -1,6 +1,7 @@
 ---
-- name: Install and configure ufw
+- name: Install ufw
   become: true
+  tags: install
   block:
     - name: Setup system environment
       ansible.builtin.apt:
@@ -8,6 +9,10 @@
           - ufw
         state: present
         update_cache: true
+- name: Configure ufw
+  become: true
+  tags: setup
+  block:
     - name: Configure default deny incoming
       community.general.ufw:
         default: incoming

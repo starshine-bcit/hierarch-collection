@@ -1,6 +1,7 @@
 ---
 - name: Setup system environment
   become: true
+  tags: install
   block:
     - name: Install necessary packages
       ansible.builtin.apt:
@@ -9,6 +10,10 @@
           - nodejs
         state: present
         update_cache: true
+- name: Install wikijs
+  become: true
+  tags: install
+  block:
     - name: Create /srv dir if not exist
       ansible.builtin.file:
         state: directory
@@ -43,9 +48,6 @@
         owner: wikijs
         group: root
         mode: '770'
-- name: Install and configure wikijs
-  become: true
-  block:
     - name: Download release archive
       ansible.builtin.get_url:
         url: https://github.com/Requarks/wiki/releases/latest/download/wiki-js.tar.gz
@@ -60,6 +62,10 @@
         remote_src: true
         owner: root
         group: wikijs
+- name: Install and configure wikijs
+  become: true
+  tags: setup
+  block:
     - name: Copy over config template
       ansible.builtin.template:
         src: config.yml.j2

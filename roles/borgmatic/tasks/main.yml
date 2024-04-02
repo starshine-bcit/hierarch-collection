@@ -1,6 +1,7 @@
 ---
 - name: Configure system environment
   become: true
+  tags: install
   block:
     - name: Install necessary packages
       ansible.builtin.apt:
@@ -10,6 +11,7 @@
         state: present
 - name: Configure borgmatic
   become: true
+  tags: setup
   block:
     - name: Ensure borgmatic config dir exists
       ansible.builtin.file:
